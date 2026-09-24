@@ -4,9 +4,9 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig(() => {
+export default defineConfig(({ command }) => {
   return {
-    base: '/Geniverse/',
+    base: command === 'build' ? './' : '/',
     plugins: [
       react(),
       tailwindcss(),
@@ -14,12 +14,12 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
-          id: '/',
+          id: './',
           name: 'Brights Class 10 CBSE Prep',
           short_name: 'Brights 10',
           description: 'CBSE Class 10 Board Exam Prep with high-yield MCQs, chapter study, and AI tutor.',
-          start_url: '/',
-          scope: '/',
+          start_url: './',
+          scope: './',
           display: 'standalone',
           orientation: 'portrait-primary',
           background_color: '#f8fafc',
@@ -27,19 +27,19 @@ export default defineConfig(() => {
           categories: ['education', 'study', 'books'],
           icons: [
             {
-              src: '/pwa-192x192.png',
+              src: 'pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-512x512.png',
+              src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/pwa-maskable-512x512.png',
+              src: 'pwa-maskable-512x512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
