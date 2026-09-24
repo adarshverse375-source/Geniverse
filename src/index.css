@@ -1,14 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Quicksand:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-quicksand: 'Quicksand', sans-serif;
   --font-jakarta: 'Plus Jakarta Sans', sans-serif;
   --font-vietnam: 'Be Vietnam Pro', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* Custom styles for our dual themes */
-
+/* Custom Text Gradient Clips */
 .gradient-text-clip {
   background: linear-gradient(135deg, #38bdf8 0%, #ec4899 100%);
   -webkit-background-clip: text;
@@ -33,7 +33,7 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* Custom scrollbars for high-energy aesthetic */
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -50,10 +50,4 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 142, 156, 0.5);
-}
-
-/* Custom bounce keyframe for active tactile button */
-@keyframes pressDown {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(2px); }
 }
