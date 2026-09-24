@@ -1,0 +1,8 @@
+{
+  "name": "CBSE Class 10 Study Dashboard & Quizzes",
+  "description": "An interactive CBSE Class 10 learning platform that supports dual visual styles: 'Learning Brights' (light and tactile) and 'Midnight Brights' (dark and glassmorphic). Includes quizzes, flashcards, a progress tracker, and a multi-turn Gemini AI study companion.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
