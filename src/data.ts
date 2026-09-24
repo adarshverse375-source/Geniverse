@@ -84,6 +84,41 @@ export const CBSE_CHAPTERS: Chapter[] = [
     ]
   },
   {
+    id: 'math-triangles',
+    name: 'Triangles & Similarity',
+    subject: 'Mathematics',
+    keySummary: [
+      'Two figures having the same shape but not necessarily the same size are called similar figures. All congruent figures are similar, but similar figures need not be congruent.',
+      'Basic Proportionality Theorem (Thales Theorem): If a line is drawn parallel to one side of a triangle intersecting the other two sides in distinct points, the other two sides are divided in the same ratio.',
+      'Criteria for Similarity of Triangles: AAA (Angle-Angle-Angle or AA), SSS (Side-Side-Side), and SAS (Side-Angle-Side).',
+      'If two triangles are similar, the ratio of their corresponding sides and perimeters are equal.'
+    ],
+    formulasOrFacts: [
+      'Basic Proportionality Theorem (BPT): AD / DB = AE / EC when DE ∥ BC',
+      'AA Similarity Criterion: If two angles of one triangle are respectively equal to two angles of another triangle, the two triangles are similar.',
+      'SAS Criterion: One angle equal and including sides proportional.'
+    ],
+    flashcards: [
+      { id: 'm-tr-1', front: 'State the Basic Proportionality Theorem (Thales Theorem).', back: 'If a line is drawn parallel to one side of a triangle intersecting the other two sides, it divides those sides in the same ratio.', extraInfo: 'Proven using the ratio of triangle areas having common heights.' },
+      { id: 'm-tr-2', front: 'What is the AA similarity criterion for triangles?', back: 'If two angles of one triangle are equal to two angles of another triangle, then the two triangles are similar.', extraInfo: 'Follows directly from angle-sum property of triangles (180°).' },
+      { id: 'm-tr-3', front: 'Are all equilateral triangles similar?', back: 'Yes! Every equilateral triangle has internal angles of 60°, so by AAA criterion, all equilateral triangles are always similar.', extraInfo: 'Their shapes are identical regardless of side length.' }
+    ],
+    highYieldQuestions: [
+      {
+        questionText: 'In ΔABC, DE ∥ BC with D on AB and E on AC. If AD = 3 cm, DB = 5 cm, and AE = 4.5 cm, then EC is:',
+        options: ['7.5 cm', '6.0 cm', '8.0 cm', '9.0 cm'],
+        correctIndex: 0,
+        explanation: 'By Thales Theorem (BPT), AD/DB = AE/EC. Substituting: 3/5 = 4.5/EC => EC = (5 × 4.5) / 3 = 22.5 / 3 = 7.5 cm.'
+      },
+      {
+        questionText: 'Which criterion is sufficient to prove two triangles similar if only two angles are known to be equal?',
+        options: ['SSS criterion', 'AA criterion', 'SAS criterion', 'RHS criterion'],
+        correctIndex: 1,
+        explanation: 'If two corresponding angles are equal, the third angle must also be equal (sum = 180°), satisfying the AA (or AAA) similarity criterion.'
+      }
+    ]
+  },
+  {
     id: 'science-chem-reactions',
     name: 'Chemical Reactions & Equations',
     subject: 'Science',

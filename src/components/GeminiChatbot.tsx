@@ -16,9 +16,13 @@ import {
   BookOpen, 
   ChevronDown,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Palette,
+  Download
 } from 'lucide-react';
 import { ChatMessage, ChatModelChoice, ChatRoleChoice, SubjectType } from '../types';
+import { FormattedMessage, cleanLatexMath } from './FormattedMessage';
+import { ImageGenerationModal } from './ImageGenerationModal';
 
 interface GeminiChatbotProps {
   isMidnight: boolean;
@@ -62,17 +66,17 @@ const ROLES_CONFIG: Record<ChatRoleChoice, { title: string; subtitle: string; ic
 
 const MODELS_CONFIG: Record<ChatModelChoice, { name: string; tag: string; icon: React.ElementType }> = {
   'gemini-3.5-flash': {
-    name: 'Gemini 3.5 Flash',
+    name: 'Bright AI 2.0',
     tag: 'General Tasks (Default)',
     icon: Sparkles
   },
   'gemini-3.1-flash-lite': {
-    name: 'Gemini 3.1 Flash-Lite',
+    name: 'Bright AI Lite',
     tag: 'Ultra-Fast Tasks',
     icon: Zap
   },
   'gemini-3.1-pro-preview': {
-    name: 'Gemini 3.1 Pro',
+    name: 'Bright AI Pro',
     tag: 'Complex Multi-step Reasoning',
     icon: Brain
   }
@@ -98,7 +102,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
       {
         id: 'welcome-1',
         sender: 'ai',
-        text: `Namaste! 👋 I'm your CBSE Class 10 Gemini study companion.\n\nWe're currently focusing on **${activeSubject}: ${activeChapterName}**. How can I help you today? You can ask for step-by-step mathematical proofs, key NCERT concepts, high-yield board marking rubrics, or take a rapid-fire drill!`,
+        text: `Namaste! 👋 I'm your CBSE Class 10 study companion powered by **Bright AI 2.0**.\n\nWe're currently focusing on **${activeSubject}: ${activeChapterName}**. How can I help you today? You can ask for step-by-step mathematical proofs, key NCERT concepts, high-yield board marking rubrics, take a rapid-fire drill, or use **Image Generation** to visualize diagrams!`,
         timestamp: Date.now(),
         modelUsed: 'gemini-3.5-flash',
         roleUsed: 'general'
@@ -114,9 +118,26 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleInsertGeneratedImage = (imagePrompt: string, imageUrl?: string, svgContent?: string) => {
+    const newMsg: ChatMessage = {
+      id: `img-${Date.now()}`,
+      sender: 'ai',
+      text: `Here is the requested diagram for **"${imagePrompt}"**:`,
+      timestamp: Date.now(),
+      modelUsed: selectedModel,
+      roleUsed: selectedRole,
+      imageUrl,
+      svgContent,
+      imagePrompt
+    };
+    setMessages(prev => [...prev, newMsg]);
+    onRewardXP(20, 'Generated educational visual diagram');
+  };
 
   // Save history to localStorage
   useEffect(() => {
@@ -185,7 +206,10 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
         text: data.text || 'No response generated.',
         timestamp: Date.now(),
         modelUsed: data.modelUsed || selectedModel,
-        roleUsed: data.roleUsed || selectedRole
+        roleUsed: data.roleUsed || selectedRole,
+        imageUrl: data.generatedImage?.imageUrl,
+        svgContent: data.generatedImage?.svgContent,
+        imagePrompt: data.generatedImage?.prompt
       };
 
       setMessages(prev => [...prev, aiMsg]);
@@ -212,7 +236,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
   };
 
   const handleCopy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(cleanLatexMath(text));
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
@@ -224,10 +248,10 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
 
   // Contextual prompt suggestions based on subject and chapter
   const promptSuggestions = [
+    `Generate image of stomata with open and closed pores`,
     `Summarize the key board exam points of "${activeChapterName}"`,
     `Explain the most repeated 5-mark question in ${activeSubject}`,
-    `Give me a rapid 3-question active recall drill on "${activeChapterName}"`,
-    `What are the critical formulas / keywords examiners look for in "${activeChapterName}"?`
+    `Give me a rapid 3-question active recall drill on "${activeChapterName}"`
   ];
 
   return (
@@ -248,7 +272,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm md:text-base font-extrabold text-slate-900 dark:text-white">
-                CBSE Gemini Mentor
+                CBSE Bright AI Mentor
               </h3>
               <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                 Multi-Turn Active
@@ -262,6 +286,21 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
 
         {/* Utility Actions */}
         <div className="flex items-center gap-2">
+          {/* Image Generation Studio Button */}
+          <button
+            onClick={() => setIsImageModalOpen(true)}
+            className={`py-1.5 px-3 rounded-xl border font-bold flex items-center gap-1.5 transition-all shadow-xs ${
+              isMidnight 
+                ? 'bg-gradient-to-r from-sky-500/20 via-indigo-500/20 to-purple-500/20 border-sky-500/40 text-sky-300 hover:brightness-110' 
+                : 'bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 border-sky-300 text-sky-800 hover:border-sky-400'
+            }`}
+            title="Open AI Image Generation Studio"
+          >
+            <Palette className="w-3.5 h-3.5 text-sky-500" />
+            <span className="text-xs font-black">Image Generation</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sky-500 text-white font-black">AI</span>
+          </button>
+
           {/* Clear history */}
           <button
             onClick={handleClearHistory}
@@ -364,7 +403,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
                 }`}
               >
                 <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 py-1">
-                  Select Gemini Model Tier
+                  Select Bright AI Model Tier
                 </div>
                 {(Object.keys(MODELS_CONFIG) as ChatModelChoice[]).map((mKey) => {
                   const m = MODELS_CONFIG[mKey];
@@ -422,17 +461,85 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
               <div className={`max-w-[85%] sm:max-w-[78%] flex flex-col ${isAi ? 'items-start' : 'items-end'}`}>
                 {/* Message Bubble */}
                 <div 
-                  className={`p-3.5 md:p-4 rounded-2xl text-xs md:text-sm leading-relaxed whitespace-pre-wrap ${
+                  className={`p-3.5 md:p-4 rounded-2xl text-xs md:text-sm leading-relaxed ${
                     isAi
                       ? isMidnight
                         ? 'bg-slate-800/85 text-slate-100 border border-slate-700/70 rounded-tl-none shadow-sm'
                         : 'bg-slate-50 text-slate-800 border border-slate-200 rounded-tl-none shadow-xs'
                       : isMidnight
-                        ? 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-tr-none font-medium shadow-md'
-                        : 'bg-[#0058be] text-white rounded-tr-none font-medium shadow-sm'
+                        ? 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white rounded-tr-none font-medium shadow-md whitespace-pre-wrap'
+                        : 'bg-[#0058be] text-white rounded-tr-none font-medium shadow-sm whitespace-pre-wrap'
                   }`}
                 >
-                  {msg.text}
+                  {isAi ? (
+                    <>
+                      <FormattedMessage content={msg.text} isMidnight={isMidnight} />
+                      
+                      {/* Generated Raster Image View */}
+                      {msg.imageUrl && (
+                        <div className={`mt-3 rounded-2xl overflow-hidden border p-2 flex flex-col items-center ${
+                          isMidnight ? 'bg-slate-900/90 border-slate-700' : 'bg-white border-slate-200 shadow-xs'
+                        }`}>
+                          <div className={`w-full flex items-center justify-between px-2 py-1 text-[11px] font-bold text-sky-500 border-b mb-2 ${
+                            isMidnight ? 'border-slate-800' : 'border-slate-100'
+                          }`}>
+                            <span className="flex items-center gap-1.5">
+                              <Palette className="w-3.5 h-3.5 text-sky-400" />
+                              <span className="font-extrabold">Image Generation</span>
+                            </span>
+                            <a
+                              href={msg.imageUrl}
+                              download={`CBSE-Image-${msg.id}.png`}
+                              className="text-[10px] text-slate-500 hover:text-sky-500 flex items-center gap-1 font-semibold"
+                            >
+                              <Download className="w-3 h-3" /> Download
+                            </a>
+                          </div>
+                          <img
+                            src={msg.imageUrl}
+                            alt={msg.imagePrompt || 'Generated diagram'}
+                            className="rounded-xl max-h-[360px] w-auto object-contain shadow-xs"
+                          />
+                        </div>
+                      )}
+
+                      {/* Generated SVG Diagram View */}
+                      {msg.svgContent && (
+                        <div className={`mt-3 rounded-2xl overflow-hidden border p-2 flex flex-col items-center ${
+                          isMidnight ? 'bg-slate-900/90 border-slate-700' : 'bg-white border-slate-200 shadow-xs'
+                        }`}>
+                          <div className={`w-full flex items-center justify-between px-2 py-1 text-[11px] font-bold text-sky-500 border-b mb-2 ${
+                            isMidnight ? 'border-slate-800' : 'border-slate-100'
+                          }`}>
+                            <span className="flex items-center gap-1.5">
+                              <Palette className="w-3.5 h-3.5 text-sky-400" />
+                              <span className="font-extrabold">Image Generation</span>
+                            </span>
+                            <button
+                              onClick={() => {
+                                const blob = new Blob([msg.svgContent!], { type: 'image/svg+xml;charset=utf-8' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `CBSE-Diagram-${msg.id}.svg`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }}
+                              className="text-[10px] text-slate-500 hover:text-sky-500 flex items-center gap-1 font-semibold"
+                            >
+                              <Download className="w-3 h-3" /> Download SVG
+                            </button>
+                          </div>
+                          <div
+                            className="w-full flex items-center justify-center p-1 overflow-x-auto"
+                            dangerouslySetInnerHTML={{ __html: msg.svgContent }}
+                          />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    msg.text
+                  )}
                 </div>
 
                 {/* Footer metadata & copy action */}
@@ -487,10 +594,10 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
               <Sparkles className="w-4 h-4 text-violet-500 animate-spin" />
               <span className="font-bold">
                 {selectedModel === 'gemini-3.1-pro-preview' 
-                  ? 'Gemini 3.1 Pro is computing deep multi-step reasoning...' 
+                  ? 'Bright AI Pro is computing deep multi-step reasoning...' 
                   : selectedModel === 'gemini-3.1-flash-lite'
-                    ? 'Gemini 3.1 Flash-Lite is firing rapid answer...'
-                    : 'Gemini 3.5 Flash is formulating comprehensive response...'}
+                    ? 'Bright AI Lite is firing rapid answer...'
+                    : 'Bright AI 2.0 is formulating comprehensive response...'}
               </span>
             </div>
           </div>
@@ -508,7 +615,20 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
       </div>
 
       {/* Suggested Prompt Chips */}
-      <div className="px-4 py-2 border-t border-slate-200/40 bg-slate-500/5 overflow-x-auto flex gap-2">
+      <div className="px-4 py-2 border-t border-slate-200/40 bg-slate-500/5 overflow-x-auto flex items-center gap-2">
+        {/* Quick Image Generation Chip */}
+        <button
+          onClick={() => setIsImageModalOpen(true)}
+          className={`text-[11px] py-1 px-3 rounded-full shrink-0 border transition-all font-black flex items-center gap-1.5 shadow-xs ${
+            isMidnight 
+              ? 'bg-gradient-to-r from-sky-500/20 to-purple-500/20 border-sky-500/40 text-sky-300 hover:brightness-110' 
+              : 'bg-gradient-to-r from-sky-50 to-purple-50 border-sky-300 text-sky-800 hover:border-sky-400'
+          }`}
+        >
+          <Palette className="w-3.5 h-3.5 text-sky-500" />
+          <span>Image Generation</span>
+        </button>
+
         {promptSuggestions.map((chip, i) => (
           <button
             key={i}
@@ -533,12 +653,25 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
         }}
         className="p-3 border-t border-slate-200/50 bg-slate-500/5 flex items-center gap-2"
       >
+        <button
+          type="button"
+          onClick={() => setIsImageModalOpen(true)}
+          className={`p-3 rounded-xl border transition-all shrink-0 ${
+            isMidnight 
+              ? 'bg-slate-900 border-slate-800 text-sky-400 hover:bg-slate-800' 
+              : 'bg-white border-slate-200 text-sky-600 hover:bg-sky-50 shadow-xs'
+          }`}
+          title="Open AI Image Generation"
+        >
+          <Palette className="w-4 h-4" />
+        </button>
+
         <input
           ref={inputRef}
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={`Ask ${activeRoleData.title} about "${activeChapterName}"...`}
+          placeholder={`Ask ${activeRoleData.title} or type "Generate image of stomata", "Draw BPT diagram"...`}
           className={`flex-1 text-xs md:text-sm font-semibold outline-none py-3 px-4 rounded-xl border ${
             isMidnight 
               ? 'bg-slate-950 border-slate-800 text-white focus:border-sky-400' 
@@ -561,6 +694,16 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
           <Send className="w-4 h-4" />
         </button>
       </form>
+
+      {/* Image Generation Studio Modal */}
+      <ImageGenerationModal
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        isMidnight={isMidnight}
+        activeSubject={activeSubject}
+        activeChapterName={activeChapterName}
+        onSendToChat={handleInsertGeneratedImage}
+      />
     </div>
   );
 };

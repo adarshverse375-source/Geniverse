@@ -36,6 +36,10 @@ import { ManageQuestionsModal } from './components/ManageQuestionsModal';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { GeminiChatbot } from './components/GeminiChatbot';
+import { PomodoroTimer } from './components/PomodoroTimer';
+import { StudyRoadmap } from './components/StudyRoadmap';
+import { QuizView } from './components/QuizView';
+import { cleanLatexMath } from './components/FormattedMessage';
 
 export default function App() {
   // --- Persistent State ---
@@ -302,6 +306,14 @@ export default function App() {
       } else {
         addPoints(10, 'Completed Board MCQ Mock Exam');
       }
+    }
+  };
+
+  const handleQuizPrevious = () => {
+    if (currentQuestionIdx > 0) {
+      setCurrentQuestionIdx(prev => prev - 1);
+      setSelectedOption(null);
+      setIsAnswerSubmitted(false);
     }
   };
 
@@ -659,7 +671,7 @@ export default function App() {
                       : 'bg-white border-sky-200 hover:bg-sky-100 text-slate-700 hover:text-sky-950'
                   }`}
                 >
-                  <span>💬 Ask Gemini AI Mentor</span>
+                  <span>💬 Ask Bright AI Mentor</span>
                   <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                 </button>
               </div>
@@ -669,54 +681,114 @@ export default function App() {
           {/* RIGHT MAIN WORKSPACE (8 cols): Tabs, Flashcards, Quiz & Chat */}
           <main className="lg:col-span-8 flex flex-col gap-5">
             
-            {/* TAB SELECTOR CHIPS */}
-            <div className="flex border-b border-slate-200 dark:border-slate-800 pb-0.5 justify-start gap-4">
-              {[
-                { id: 'study', label: '📚 Study Notes', count: activeChapter.keySummary.length },
-                { id: 'quiz', label: '📝 Board Quizzes', count: activeQuestions.length },
-                { id: 'ai', label: '🤖 Gemini AI Mentor', count: null },
-                { id: 'badges', label: '🏆 Badges & Metrics', count: userProgress.unlockedBadges.length },
-              ].map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    id={`tab-button-${tab.id}`}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`pb-3.5 text-sm font-bold border-b-2 transition-all relative ${
-                      isActive 
-                        ? isMidnight 
-                          ? 'border-sky-400 text-white' 
-                          : 'border-[#0058be] text-[#0058be]'
-                        : isMidnight
-                          ? 'border-transparent text-slate-400 hover:text-slate-200'
-                          : 'border-transparent text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    <span className="flex items-center gap-1.5">
-                      {tab.label}
-                      {tab.count !== null && (
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                          isActive 
-                            ? isMidnight ? 'bg-sky-950 text-sky-400' : 'bg-blue-100 text-[#0058be]'
-                            : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                        }`}>
-                          {tab.count}
-                        </span>
+            {/* PROFESSIONAL NAVIGATION TAB BAR */}
+            <div className="w-full">
+              <nav 
+                aria-label="Study Workspace Navigation"
+                className={`p-1.5 rounded-2xl border transition-all flex items-stretch gap-1.5 overflow-x-auto no-scrollbar shadow-xs ${
+                  isMidnight 
+                    ? 'bg-slate-900/80 border-slate-800 backdrop-blur-md' 
+                    : 'bg-slate-100/90 border-slate-200'
+                }`}
+              >
+                {[
+                  { 
+                    id: 'study', 
+                    label: 'Study Notes', 
+                    sublabel: 'Notes & Flashcards',
+                    icon: BookOpen, 
+                    accent: '#0284c7',
+                    countText: `${activeChapter.keySummary.length} Topics` 
+                  },
+                  { 
+                    id: 'quiz', 
+                    label: 'Board Quizzes', 
+                    sublabel: 'PYQ Practice',
+                    icon: GraduationCap, 
+                    accent: '#059669',
+                    countText: `${activeQuestions.length} PYQs` 
+                  },
+                  { 
+                    id: 'ai', 
+                    label: 'Bright AI', 
+                    sublabel: 'Interactive Tutor',
+                    icon: Sparkles, 
+                    accent: '#7c3aed',
+                    countText: '24/7 AI' 
+                  },
+                  { 
+                    id: 'badges', 
+                    label: 'Badges & Stats', 
+                    sublabel: 'Mastery & Metrics',
+                    icon: Trophy, 
+                    accent: '#d97706',
+                    countText: `${userProgress.unlockedBadges.length} Earned` 
+                  },
+                ].map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  const TabIcon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      id={`tab-button-${tab.id}`}
+                      onClick={() => setActiveTab(tab.id as any)}
+                      className={`group relative flex-1 min-w-[130px] sm:min-w-0 py-2 px-3 rounded-xl transition-all duration-200 flex items-center justify-between gap-2 text-left ${
+                        isActive
+                          ? isMidnight
+                            ? 'bg-slate-800 text-white shadow-md border border-slate-700/80'
+                            : 'bg-white text-slate-900 shadow-sm border border-slate-200/90'
+                          : isMidnight
+                            ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 border border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div 
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                            isActive
+                              ? isMidnight ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-800'
+                              : isMidnight ? 'bg-slate-800/80 text-slate-400 group-hover:text-slate-200' : 'bg-slate-200/60 text-slate-500 group-hover:text-slate-800'
+                          }`}
+                          style={{
+                            color: isActive ? tab.accent : undefined
+                          }}
+                        >
+                          <TabIcon className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex flex-col">
+                          <span className={`text-xs sm:text-sm font-bold tracking-tight truncate leading-tight ${
+                            isActive ? (isMidnight ? 'text-white' : 'text-slate-900') : ''
+                          }`}>
+                            {tab.label}
+                          </span>
+                          <span className="text-[10px] font-medium opacity-60 truncate leading-none mt-0.5 hidden sm:block">
+                            {tab.sublabel}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Professional subtle count chip */}
+                      <span 
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 hidden md:inline-block transition-colors ${
+                          isActive
+                            ? isMidnight ? 'bg-slate-900/80 text-slate-300 border border-slate-700/60' : 'bg-slate-100 text-slate-700 border border-slate-200'
+                            : 'opacity-40 bg-transparent'
+                        }`}
+                      >
+                        {tab.countText}
+                      </span>
+
+                      {/* Active indicator bar */}
+                      {isActive && (
+                        <div 
+                          className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full"
+                          style={{ backgroundColor: tab.accent }}
+                        />
                       )}
-                    </span>
-                    
-                    {/* Animated bar indicator under active tab */}
-                    {isActive && (
-                      <motion.div 
-                        layoutId="activeTabUnderline"
-                        className="absolute bottom-0 left-0 right-0 h-[2px]"
-                        style={{ backgroundColor: isMidnight ? '#38bdf8' : '#0058be' }}
-                      />
-                    )}
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
+              </nav>
             </div>
 
             {/* TAB PANEL CONTENTS */}
@@ -734,7 +806,22 @@ export default function App() {
                   transition={{ duration: 0.2 }}
                   className="flex flex-col gap-6"
                 >
-                  
+                  {/* Visual Progress Roadmap Component */}
+                  <StudyRoadmap
+                    isMidnight={isMidnight}
+                    activeSubject={selectedSubject}
+                    chapters={CBSE_CHAPTERS}
+                    selectedChapterId={selectedChapterId}
+                    userProgress={userProgress}
+                    onSelectChapter={(chapId) => setSelectedChapterId(chapId)}
+                    onNavigateToQuiz={(chapId) => {
+                      setSelectedChapterId(chapId);
+                      setActiveTab('quiz');
+                    }}
+                    subjectColor={subjectThemeBg}
+                    onAwardBonusPoints={addPoints}
+                  />
+
                   {/* Summary Notes Card */}
                   <section 
                     className={`${
@@ -985,317 +1072,29 @@ export default function App() {
                   transition={{ duration: 0.2 }}
                   className="flex flex-col gap-6"
                 >
-                  <section 
-                    className={`${
-                      isMidnight 
-                        ? 'glass-panel rounded-2xl p-6' 
-                        : 'bg-white rounded-2xl border-2 border-slate-200 shadow-[4px_4px_0px_0px_rgba(226,232,240,1)] p-6'
-                    }`}
-                  >
-                    
-                    {/* Header with AI Custom MCQ Options & Add Question */}
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 border-b pb-4 border-slate-200/50">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h2 className={`text-xl font-extrabold ${isMidnight ? 'font-jakarta text-white' : 'font-quicksand text-slate-900'}`}>
-                            Board MCQ Mock Quiz
-                          </h2>
-                          {customQuestions.filter(q => q.chapterId === activeChapter.id).length > 0 && (
-                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/30">
-                              {customQuestions.filter(q => q.chapterId === activeChapter.id).length} Custom Added
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs opacity-75 mt-0.5">
-                          {customQuizGenerated 
-                            ? '✨ Playing newly generated Custom AI Board Exam Questions.'
-                            : `Reviewing high-yield ${activeChapter.subject} questions (${activeQuestions.length} in this chapter).`}
-                        </p>
-                      </div>
-
-                      {/* Action Buttons: Add Question + My Questions + AI Generator */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        {/* Add Custom Question Button */}
-                        <button
-                          id="add-custom-question-btn"
-                          onClick={() => setIsAddQuestionModalOpen(true)}
-                          className={`text-xs font-bold py-2.5 px-3.5 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
-                            isMidnight
-                              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 hover:bg-sky-500/30'
-                              : 'bg-amber-50 text-amber-900 border-2 border-amber-300 hover:bg-amber-100 shadow-[2px_2px_0px_0px_rgba(245,158,11,0.5)]'
-                          }`}
-                          title="Add your own custom board question"
-                        >
-                          <PlusCircle className="w-4 h-4 text-amber-500" />
-                          Add Question
-                        </button>
-
-                        {/* Manage Questions Button (if any exist) */}
-                        {customQuestions.length > 0 && (
-                          <button
-                            id="manage-custom-questions-btn"
-                            onClick={() => setIsManageQuestionsModalOpen(true)}
-                            className={`text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all ${
-                              isMidnight
-                                ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
-                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
-                            }`}
-                            title="Manage questions you have added"
-                          >
-                            <FolderKanban className="w-4 h-4 text-indigo-500" />
-                            My Questions ({customQuestions.length})
-                          </button>
-                        )}
-
-                        {/* Full-Stack AI MCQ Generation Button */}
-                        <button
-                          id="ai-generate-quiz-btn"
-                          disabled={aiQuizLoading}
-                          onClick={generateAIQuiz}
-                          className={`text-xs font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all ${
-                            isMidnight
-                              ? 'bg-gradient-to-r from-pink-500 to-violet-600 text-white hover:opacity-90 shadow-[0_0_12px_rgba(236,72,153,0.3)]'
-                              : 'bg-[#dc2c4f] text-white border-b-4 border-[#92002a] hover:translate-y-[1px] hover:border-b-2 active:translate-y-[3px] active:border-b-0'
-                          } ${aiQuizLoading ? 'opacity-50 cursor-wait' : ''}`}
-                        >
-                          <Cpu className={`w-4 h-4 ${aiQuizLoading ? 'animate-spin' : ''}`} />
-                          {aiQuizLoading ? 'Analyzing Curriculum...' : 'Generate New with AI'}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* API Generator Error Notice */}
-                    {aiQuizError && (
-                      <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
-                        <span>{aiQuizError}</span>
-                      </div>
-                    )}
-
-                    {/* --- MAIN QUIZ BODY --- */}
-                    {!quizFinished ? (
-                      activeQuestions.length > 0 ? (
-                        <div className="flex flex-col gap-5">
-                          
-                          {/* Progress Line */}
-                          <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full rounded-full transition-all duration-300"
-                              style={{ 
-                                width: `${((currentQuestionIdx + 1) / activeQuestions.length) * 100}%`,
-                                backgroundColor: subjectThemeBg
-                              }}
-                            />
-                          </div>
-                          
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-slate-400">
-                                QUESTION {currentQuestionIdx + 1} OF {activeQuestions.length}
-                              </span>
-                              {(activeQuestions[currentQuestionIdx] as CustomQuestion).author && (
-                                <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-500 border border-amber-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                  <Star className="w-3 h-3 fill-amber-500" /> Added by You
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-xs font-bold bg-indigo-500/10 text-indigo-500 px-2 py-0.5 rounded">
-                              Class 10 Board Spec
-                            </span>
-                          </div>
-
-                          {/* Question Text */}
-                          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/40">
-                            <h3 className={`text-base md:text-lg font-bold leading-relaxed ${isMidnight ? 'text-white' : 'text-slate-900'}`}>
-                              {activeQuestions[currentQuestionIdx].questionText}
-                            </h3>
-                          </div>
-
-                          {/* Multiple Choice Options */}
-                          <div className="flex flex-col gap-2.5">
-                            {activeQuestions[currentQuestionIdx].options.map((option, idx) => {
-                              const isSelected = selectedOption === idx;
-                              const isCorrect = idx === activeQuestions[currentQuestionIdx].correctIndex;
-                              
-                              // Calculate dynamic background color for quiz options
-                              let optionStyles = '';
-                              if (isAnswerSubmitted) {
-                                if (isCorrect) {
-                                  optionStyles = isMidnight 
-                                    ? 'bg-emerald-500/15 border-emerald-500 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]' 
-                                    : 'bg-emerald-50 border-emerald-500 text-emerald-800';
-                                } else if (isSelected) {
-                                  optionStyles = isMidnight 
-                                    ? 'bg-rose-500/15 border-rose-500 text-rose-400' 
-                                    : 'bg-rose-50 border-rose-500 text-rose-800';
-                                } else {
-                                  optionStyles = isMidnight 
-                                    ? 'bg-slate-900/30 border-slate-800 text-slate-500' 
-                                    : 'bg-slate-50 border-slate-100 text-slate-400';
-                                }
-                              } else {
-                                if (isSelected) {
-                                  optionStyles = isMidnight 
-                                    ? 'bg-sky-500/15 border-sky-400 text-sky-300' 
-                                    : 'bg-sky-50 border-sky-500 text-sky-800';
-                                } else {
-                                  optionStyles = isMidnight 
-                                    ? 'bg-slate-900/40 border-slate-800 hover:bg-slate-800/40 text-slate-300' 
-                                    : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700';
-                                }
-                              }
-
-                              return (
-                                <button
-                                  key={idx}
-                                  id={`quiz-option-${idx}`}
-                                  disabled={isAnswerSubmitted}
-                                  onClick={() => handleOptionSelect(idx)}
-                                  className={`w-full p-4 rounded-xl text-left border transition-all flex items-center justify-between text-xs md:text-sm font-semibold ${optionStyles}`}
-                                  style={{
-                                    boxShadow: !isMidnight && isSelected && !isAnswerSubmitted
-                                      ? `2px 2px 0px 0px ${subjectThemeBg}30`
-                                      : undefined
-                                  }}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <span 
-                                      className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-                                        isSelected 
-                                          ? 'bg-sky-500 text-white' 
-                                          : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                                      }`}
-                                    >
-                                      {String.fromCharCode(65 + idx)}
-                                    </span>
-                                    <span>{option}</span>
-                                  </div>
-                                  
-                                  {/* Right side check/cross icon */}
-                                  {isAnswerSubmitted && isCorrect && (
-                                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                                  )}
-                                  {isAnswerSubmitted && isSelected && !isCorrect && (
-                                    <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-
-                          {/* Submit & Navigation Footer */}
-                          <div className="flex justify-between items-center border-t pt-4 border-slate-200/50 mt-2">
-                            <div>
-                              {!isAnswerSubmitted ? (
-                                <span className="text-xs opacity-60">Pick an option to unlock submitting</span>
-                              ) : (
-                                <span className="text-xs text-violet-500 font-bold block bg-violet-500/10 py-1 px-2.5 rounded">
-                                  +10 Points earned on correct answer!
-                                </span>
-                              )}
-                            </div>
-                            
-                            {!isAnswerSubmitted ? (
-                              <button
-                                id="quiz-submit-btn"
-                                disabled={selectedOption === null}
-                                onClick={handleQuizSubmit}
-                                className={`text-sm font-extrabold py-3 px-6 rounded-xl transition-all ${
-                                  selectedOption === null 
-                                    ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 cursor-not-allowed opacity-60' 
-                                    : isMidnight
-                                      ? 'bg-sky-400 hover:bg-sky-300 text-slate-900 shadow-[0_0_12px_rgba(56,189,248,0.3)]'
-                                      : 'bg-[#0058be] hover:opacity-90 border-b-4 border-[#004395] text-white hover:translate-y-[1px] active:translate-y-[2px] active:border-b-0'
-                                }`}
-                              >
-                                Submit Answer
-                              </button>
-                            ) : (
-                              <button
-                                id="quiz-next-btn"
-                                onClick={handleQuizNext}
-                                className={`text-sm font-extrabold py-3 px-6 rounded-xl transition-all flex items-center gap-1.5 ${
-                                  isMidnight
-                                    ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                                    : 'bg-emerald-600 hover:opacity-90 border-b-4 border-emerald-800 text-white hover:translate-y-[1px] active:translate-y-[2px] active:border-b-0'
-                                }`}
-                              >
-                                {currentQuestionIdx === activeQuestions.length - 1 ? 'Finish Quiz' : 'Next Question'}
-                                <ArrowRight className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-
-                          {/* Explanation Accordion (Visible after submission) */}
-                          {isAnswerSubmitted && (
-                            <motion.div 
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              className="p-4 rounded-xl border bg-slate-50 dark:bg-slate-900/30 border-indigo-500/20 text-xs md:text-sm mt-3"
-                            >
-                              <div className="flex gap-2 items-center mb-1.5 text-indigo-500 font-bold">
-                                <Lightbulb className="w-4 h-4" />
-                                <span>Board Marking Scheme Explanation</span>
-                              </div>
-                              <p className="opacity-90 leading-relaxed font-semibold">
-                                {activeQuestions[currentQuestionIdx].explanation}
-                              </p>
-                            </motion.div>
-                          )}
-
-                        </div>
-                      ) : (
-                        <p className="text-sm opacity-60 text-center py-6">No questions loaded for this module.</p>
-                      )
-                    ) : (
-                      /* --- QUIZ RESULTS SHEET --- */
-                      <div className="text-center py-8 flex flex-col items-center gap-4">
-                        <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center border-2 border-emerald-500">
-                          <Award className="w-10 h-10 text-emerald-500" />
-                        </div>
-                        <div>
-                          <h3 className={`text-xl font-black ${isMidnight ? 'text-white' : 'text-slate-900'}`}>
-                            Mock Exam Complete!
-                          </h3>
-                          <p className="text-sm opacity-70 mt-1">
-                            You scored <strong className="text-emerald-500">{quizScore}</strong> correct out of <strong>{activeQuestions.length}</strong> questions!
-                          </p>
-                          <span className="text-xs font-bold py-1 px-3 rounded-full bg-slate-100 dark:bg-slate-800 mt-2 inline-block">
-                            Grade: {Math.round((quizScore / activeQuestions.length) * 100)}% Match
-                          </span>
-                        </div>
-
-                        <div className="flex gap-3 mt-4">
-                          <button
-                            id="btn-restart-quiz"
-                            onClick={handleQuizRestart}
-                            className={`text-xs font-extrabold py-3 px-5 rounded-xl transition-all flex items-center gap-1.5 ${
-                              isMidnight
-                                ? 'bg-slate-800 hover:bg-slate-700 text-white'
-                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
-                            }`}
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                            Retake Quiz
-                          </button>
-                          
-                          <button
-                            id="btn-ai-generate-another"
-                            onClick={generateAIQuiz}
-                            className={`text-xs font-bold py-3 px-5 rounded-xl transition-all flex items-center gap-1.5 ${
-                              isMidnight
-                                ? 'bg-[#38bdf8] text-[#0f172a]'
-                                : 'bg-[#0058be] text-white border-b-4 border-[#004395]'
-                            }`}
-                          >
-                            <Cpu className="w-4 h-4 animate-pulse" />
-                            Generate Different MCQs
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                  </section>
+                  <QuizView
+                    isMidnight={isMidnight}
+                    activeQuestions={activeQuestions}
+                    currentQuestionIdx={currentQuestionIdx}
+                    selectedOption={selectedOption}
+                    isAnswerSubmitted={isAnswerSubmitted}
+                    quizScore={quizScore}
+                    quizFinished={quizFinished}
+                    aiQuizLoading={aiQuizLoading}
+                    aiQuizError={aiQuizError}
+                    customQuestionsCount={customQuestions.filter(q => q.chapterId === activeChapter.id).length}
+                    subjectName={activeChapter.subject}
+                    chapterName={activeChapter.name}
+                    subjectColor={subjectThemeBg}
+                    onSelectOption={handleOptionSelect}
+                    onSubmitAnswer={handleQuizSubmit}
+                    onNextQuestion={handleQuizNext}
+                    onPreviousQuestion={handleQuizPrevious}
+                    onRestartQuiz={handleQuizRestart}
+                    onGenerateAIQuiz={generateAIQuiz}
+                    onOpenAddQuestion={() => setIsAddQuestionModalOpen(true)}
+                    onOpenManageQuestions={() => setIsManageQuestionsModalOpen(true)}
+                  />
                 </motion.div>
               )}
 
@@ -1527,42 +1326,22 @@ export default function App() {
         </div>
 
         {/* ======================================================= */}
-        {/* SYLLABUS OVERVIEW COMPRESS CARDS                       */}
+        {/* POMODORO STUDY TIMER WIDGET AT BOTTOM                   */}
         {/* ======================================================= */}
-        <section 
-          id="syllabus-metrics-grid"
-          className={`grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 ${
-            isMidnight 
-              ? 'glass-panel rounded-2xl p-5' 
-              : 'bg-white rounded-2xl border-2 border-slate-200 shadow-[4px_4px_0px_0px_rgba(226,232,240,1)] p-5'
-          }`}
-        >
-          <div className="text-center p-3">
-            <span className="text-xs font-bold text-slate-400 uppercase block">Mathematics chapters</span>
-            <span className="text-2xl font-black mt-1 block">3 Curated</span>
-            <span className="text-[10px] opacity-75 text-emerald-500 font-extrabold mt-1 block">HCF, Quadratics, Trig</span>
-          </div>
-          <div className="text-center p-3 border-l border-slate-200/50">
-            <span className="text-xs font-bold text-slate-400 uppercase block">Science chapters</span>
-            <span className="text-2xl font-black mt-1 block">2 Curated</span>
-            <span className="text-[10px] opacity-75 text-rose-500 font-extrabold mt-1 block">Reactions, Life Processes</span>
-          </div>
-          <div className="text-center p-3 border-l border-slate-200/50">
-            <span className="text-xs font-bold text-slate-400 uppercase block">Social Science chapters</span>
-            <span className="text-2xl font-black mt-1 block">1 Curated</span>
-            <span className="text-[10px] opacity-75 text-amber-500 font-extrabold mt-1 block">Nationalism in India</span>
-          </div>
-          <div className="text-center p-3 border-l border-slate-200/50">
-            <span className="text-xs font-bold text-slate-400 uppercase block">English chapters</span>
-            <span className="text-2xl font-black mt-1 block">1 Curated</span>
-            <span className="text-[10px] opacity-75 text-emerald-500 font-extrabold mt-1 block">Mandela Long Walk</span>
-          </div>
+        <section className="mt-2">
+          <PomodoroTimer
+            isMidnight={isMidnight}
+            activeSubject={selectedSubject}
+            activeChapterName={activeChapter.name}
+            onAwardPoints={addPoints}
+            subjectColor={subjectThemeBg}
+          />
         </section>
 
         {/* --- SYSTEM STATS / HUMBLE FOOTER --- */}
         <footer className="text-center py-4 opacity-50 text-[10px] font-bold flex items-center justify-center gap-1.5">
           <GraduationCap className="w-3.5 h-3.5" />
-          <span>CBSE Class 10 Interactive Study Hub &copy; 2026. Powered by Gemini 3.5.</span>
+          <span>CBSE Class 10 Interactive Study Hub &copy; 2026. Powered by Bright AI 2.0.</span>
         </footer>
 
         {/* --- CUSTOM QUESTION MODALS --- */}

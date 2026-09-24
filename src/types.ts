@@ -71,4 +71,17 @@ export interface ChatMessage {
   timestamp: number;
   modelUsed?: ChatModelChoice;
   roleUsed?: ChatRoleChoice;
+  imageUrl?: string;
+  imagePrompt?: string;
+  svgContent?: string;
+}
+
+export interface GeneratedImageItem {
+  id: string;
+  prompt: string;
+  imageUrl?: string;
+  svgContent?: string;
+  createdAt: number;
+  subject?: string;
+  chapter?: string;
 }
