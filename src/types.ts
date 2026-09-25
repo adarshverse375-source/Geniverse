@@ -60,7 +60,7 @@ export const BADGES: Badge[] = [
 ];
 
 // --- Chat & Gemini AI Types ---
-export type ChatModelChoice = 'gemini-3.5-flash' | 'gemini-3.1-flash-lite' | 'gemini-3.1-pro-preview';
+export type ChatModelChoice = 'gemini-2.5-flash' | 'gemini-2.5-flash-lite' | 'gemini-3.5-flash' | 'gemini-3.5-flash-lite' | 'gemini-3.1-flash-lite';
 
 export type ChatRoleChoice = 'general' | 'examiner' | 'stem' | 'speed_drill' | 'humanities';
 

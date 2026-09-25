@@ -23,6 +23,7 @@ import {
 import { ChatMessage, ChatModelChoice, ChatRoleChoice, SubjectType } from '../types';
 import { FormattedMessage, cleanLatexMath } from './FormattedMessage';
 import { ImageGenerationModal } from './ImageGenerationModal';
+import { Bright10Logo } from './Bright10Logo';
 
 interface GeminiChatbotProps {
   isMidnight: boolean;
@@ -65,19 +66,29 @@ const ROLES_CONFIG: Record<ChatRoleChoice, { title: string; subtitle: string; ic
 };
 
 const MODELS_CONFIG: Record<ChatModelChoice, { name: string; tag: string; icon: React.ElementType }> = {
-  'gemini-3.5-flash': {
-    name: 'Bright AI 2.0',
-    tag: 'General Tasks (Default)',
+  'gemini-2.5-flash': {
+    name: 'Bright 10 Pro',
+    tag: 'Highest Reliability & Detail (Recommended)',
     icon: Sparkles
   },
-  'gemini-3.1-flash-lite': {
-    name: 'Bright AI Lite',
-    tag: 'Ultra-Fast Tasks',
+  'gemini-2.5-flash-lite': {
+    name: 'Bright 10 Turbo',
+    tag: 'Ultra Fast & High Availability',
     icon: Zap
   },
-  'gemini-3.1-pro-preview': {
-    name: 'Bright AI Pro',
-    tag: 'Complex Multi-step Reasoning',
+  'gemini-3.5-flash': {
+    name: 'Bright 10 Frontier',
+    tag: 'Next-Gen Frontier Intelligence',
+    icon: Brain
+  },
+  'gemini-3.5-flash-lite': {
+    name: 'Bright 10 Fast',
+    tag: 'Lightweight Tasks',
+    icon: Zap
+  },
+  'gemini-3.1-flash-lite': {
+    name: 'Bright 10 Lite',
+    tag: 'Quick Revisions',
     icon: Brain
   }
 };
@@ -102,9 +113,9 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
       {
         id: 'welcome-1',
         sender: 'ai',
-        text: `Namaste! 👋 I'm your CBSE Class 10 study companion powered by **Bright AI 2.0**.\n\nWe're currently focusing on **${activeSubject}: ${activeChapterName}**. How can I help you today? You can ask for step-by-step mathematical proofs, key NCERT concepts, high-yield board marking rubrics, take a rapid-fire drill, or use **Image Generation** to visualize diagrams!`,
+        text: `Namaste! 👋 I'm your CBSE Class 10 study companion powered by **Bright 10 AI**.\n\nWe're currently focusing on **${activeSubject}: ${activeChapterName}**. How can I help you today? You can ask for step-by-step mathematical proofs, key NCERT concepts, high-yield board marking rubrics, take a rapid-fire drill, or use **Image Generation** to visualize diagrams!`,
         timestamp: Date.now(),
-        modelUsed: 'gemini-3.5-flash',
+        modelUsed: 'gemini-2.5-flash',
         roleUsed: 'general'
       }
     ];
@@ -113,7 +124,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<ChatModelChoice>('gemini-3.5-flash');
+  const [selectedModel, setSelectedModel] = useState<ChatModelChoice>('gemini-2.5-flash');
   const [selectedRole, setSelectedRole] = useState<ChatRoleChoice>('general');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
@@ -216,7 +227,14 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
       onRewardXP(5, 'Consulted Gemini Study Companion');
     } catch (err: any) {
       console.error('[GeminiChatbot] Error:', err);
-      setErrorMessage(err.message || 'Unable to connect to Gemini. Please try again.');
+      const rawError = String(err?.message || err);
+      let friendlyError = 'Unable to connect to Gemini study companion. Please try again.';
+      if (rawError.includes('503') || rawError.includes('demand') || rawError.includes('UNAVAILABLE')) {
+        friendlyError = 'The AI model is experiencing temporary peak demand from CBSE students. Switched to high-availability mode. Please try asking again!';
+      } else if (rawError.includes('429') || rawError.includes('quota') || rawError.includes('RESOURCE_EXHAUSTED')) {
+        friendlyError = 'Rate limit reached. Automatically switching to fast lite mode.';
+      }
+      setErrorMessage(friendlyError);
     } finally {
       setIsLoading(false);
     }
@@ -265,14 +283,14 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
       {/* Top Header Bar */}
       <div className="p-4 border-b border-slate-200/50 bg-slate-500/5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center shadow-md relative">
-            <Bot className="w-5 h-5" />
+          <div className="relative shrink-0">
+            <Bright10Logo size={42} glow={false} />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full ring-2 ring-white dark:ring-slate-900" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm md:text-base font-extrabold text-slate-900 dark:text-white">
-                CBSE Bright AI Mentor
+                Bright 10 CBSE AI Mentor
               </h3>
               <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                 Multi-Turn Active
@@ -453,8 +471,8 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
               className={`flex ${isAi ? 'justify-start' : 'justify-end'} items-start gap-2.5 group`}
             >
               {isAi && (
-                <div className="w-7 h-7 rounded-xl bg-violet-500/20 text-violet-400 font-extrabold text-[11px] flex items-center justify-center shrink-0 mt-1 shadow-xs">
-                  <Bot className="w-4 h-4" />
+                <div className="shrink-0 mt-1">
+                  <Bright10Logo size={28} glow={false} />
                 </div>
               )}
 
@@ -593,8 +611,8 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
             >
               <Sparkles className="w-4 h-4 text-violet-500 animate-spin" />
               <span className="font-bold">
-                {selectedModel === 'gemini-3.1-pro-preview' 
-                  ? 'Bright AI Pro is computing deep multi-step reasoning...' 
+                {selectedModel === 'gemini-3.5-flash-lite' 
+                  ? 'Bright AI Fast is computing high-speed response...' 
                   : selectedModel === 'gemini-3.1-flash-lite'
                     ? 'Bright AI Lite is firing rapid answer...'
                     : 'Bright AI 2.0 is formulating comprehensive response...'}
@@ -605,9 +623,23 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
 
         {/* Error Notice */}
         {errorMessage && (
-          <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-600 dark:text-rose-300 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>{errorMessage}</span>
+          <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-600 dark:text-rose-300 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+            <button
+              onClick={() => {
+                setErrorMessage(null);
+                const lastUserMsg = [...messages].reverse().find(m => m.sender === 'user');
+                if (lastUserMsg) {
+                  handleSend(lastUserMsg.text);
+                }
+              }}
+              className="px-2.5 py-1 rounded-lg bg-rose-500 text-white font-bold text-[10px] hover:bg-rose-600 transition-all shrink-0 cursor-pointer"
+            >
+              Retry
+            </button>
           </div>
         )}
 

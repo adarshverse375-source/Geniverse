@@ -1,23 +1,180 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8" />
-      <stop offset="50%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#ec4899" />
+    <!-- Background squircle gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#181920" />
+      <stop offset="55%" stop-color="#0b0c10" />
+      <stop offset="100%" stop-color="#040406" />
+    </radialGradient>
+
+    <!-- Squircle top rim highlight -->
+    <linearGradient id="rimGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25" />
+      <stop offset="15%" stop-color="#ffffff" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.01" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0f172a" flood-opacity="0.35" />
+
+    <!-- Star radial glow -->
+    <radialGradient id="starGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fffbeb" stop-opacity="1" />
+      <stop offset="20%" stop-color="#fde047" stop-opacity="0.85" />
+      <stop offset="50%" stop-color="#eab308" stop-opacity="0.4" />
+      <stop offset="75%" stop-color="#ca8a04" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#ca8a04" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Glass page gradients -->
+    <linearGradient id="glassSpine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.4" />
+    </linearGradient>
+
+    <linearGradient id="glassPageLeft" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.12" />
+      <stop offset="70%" stop-color="#ffffff" stop-opacity="0.28" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.65" />
+    </linearGradient>
+
+    <linearGradient id="glassPageRight" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.12" />
+      <stop offset="70%" stop-color="#ffffff" stop-opacity="0.28" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.65" />
+    </linearGradient>
+
+    <linearGradient id="glassEdgeSheen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#cbd5e1" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.75" />
+    </linearGradient>
+
+    <!-- Star facet gradients -->
+    <linearGradient id="starFacetLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#fef08a" />
+    </linearGradient>
+    <linearGradient id="starFacetWarm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="starFacetShade" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+
+    <!-- Number 10 gradient -->
+    <linearGradient id="tenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f5d0a9" />
+    </linearGradient>
+
+    <!-- Filter for soft blur on glow -->
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)" />
-  <g filter="url(#shadow)">
-    <!-- Mortarboard Cap / Graduation Symbol -->
-    <path d="M256 120 L400 190 L256 260 L112 190 Z" fill="#ffffff" />
-    <path d="M160 216 V290 C160 340 352 340 352 290 V216 L256 264 Z" fill="#f8fafc" opacity="0.9" />
-    <!-- Tassel -->
-    <path d="M376 195 V280" stroke="#fde047" stroke-width="8" stroke-linecap="round" />
-    <circle cx="376" cy="285" r="10" fill="#fde047" />
-    <!-- Radiant Sparkle / Star in Center -->
-    <path d="M256 320 Q256 360 296 360 Q256 360 256 400 Q256 360 216 360 Q256 360 256 320 Z" fill="#fde047" />
+
+  <!-- Squircle Base with smooth iOS/Android radius -->
+  <rect width="512" height="512" rx="116" fill="url(#bgGrad)" />
+  <rect width="512" height="512" rx="116" fill="none" stroke="url(#rimGrad)" stroke-width="3" />
+
+  <!-- Outer Glass Book Shadow/Refraction -->
+  <g transform="translate(0, -6)">
+    <!-- Book Back Layers (Layered Glass Pages effect) -->
+    <!-- Third layer / back plate -->
+    <path d="M148 140 C148 126, 160 120, 180 124 L244 138 C252 140, 256 142, 256 142 C256 142, 260 140, 268 138 L332 124 C352 120, 364 126, 364 140 L364 286 C364 298, 350 306, 332 308 L268 316 C260 317, 256 322, 256 322 C256 322, 252 317, 244 316 L180 308 C162 306, 148 298, 148 286 Z" 
+          fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="4" />
+
+    <!-- Second layer -->
+    <path d="M156 134 C156 122, 168 116, 186 120 L246 134 C252 136, 256 138, 256 138 C256 138, 260 136, 266 134 L326 120 C344 116, 356 122, 356 134 L356 292 C356 302, 344 310, 328 312 L266 320 C260 321, 256 326, 256 326 C256 326, 252 321, 246 320 L184 312 C168 310, 156 302, 156 292 Z" 
+          fill="none" stroke="#ffffff" stroke-opacity="0.38" stroke-width="4.5" />
+
+    <!-- Primary Front Frosted Glass Book Outline & Body -->
+    <!-- Left Glass Wing -->
+    <path d="M166 126 C166 114, 178 110, 196 114 L248 128 C253 130, 256 133, 256 135 L256 332 C256 332, 252 325, 244 324 L192 316 C174 313, 166 304, 166 292 Z"
+          fill="url(#glassPageLeft)" stroke="url(#glassEdgeSheen)" stroke-width="5" stroke-linejoin="round" />
+
+    <!-- Right Glass Wing -->
+    <path d="M346 126 C346 114, 334 110, 316 114 L264 128 C259 130, 256 133, 256 135 L256 332 C256 332, 260 325, 268 324 L320 316 C338 313, 346 304, 346 292 Z"
+          fill="url(#glassPageRight)" stroke="url(#glassEdgeSheen)" stroke-width="5" stroke-linejoin="round" />
+
+    <!-- Front Curved Glass Page Leaf (Left Open Arc) -->
+    <path d="M182 134 C210 148, 238 152, 256 142 L256 324 C238 320, 206 312, 182 288 Z"
+          fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.5" stroke-width="3" />
+
+    <!-- Front Curved Glass Page Leaf (Right Open Arc) -->
+    <path d="M330 134 C302 148, 274 152, 256 142 L256 324 C274 320, 306 312, 330 288 Z"
+          fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.5" stroke-width="3" />
+
+    <!-- Curved Bottom Spine Bracket with glass refraction glow -->
+    <path d="M236 324 C244 336, 256 340, 256 340 C256 340, 268 336, 276 324 C272 328, 264 332, 256 332 C248 332, 240 328, 236 324 Z"
+          fill="url(#starFacetWarm)" opacity="0.8" filter="url(#softGlow)" />
+    <path d="M232 322 C242 334, 256 338, 256 338 C256 338, 270 334, 280 322"
+          fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" opacity="0.9" />
+
+    <!-- RADIANT GLOW BEHIND STAR -->
+    <circle cx="256" cy="225" r="95" fill="url(#starGlow)" opacity="0.8" filter="url(#softGlow)" />
+
+    <!-- THE 8-POINTED LUMINOUS FACETED STAR -->
+    <!-- Star Center Coordinates: (256, 225) -->
+    <!-- Vertical Point: (256, 160) to (256, 290) - radius 65 -->
+    <!-- Horizontal Point: (191, 225) to (321, 225) - radius 65 -->
+    <!-- Diagonal Points: radius 40 -->
+    <g transform="translate(0, 0)">
+      <!-- North Main Spike Facets -->
+      <polygon points="256,225 256,158 250,218" fill="url(#starFacetLight)" />
+      <polygon points="256,225 256,158 262,218" fill="url(#starFacetWarm)" />
+
+      <!-- South Main Spike Facets -->
+      <polygon points="256,225 256,292 250,232" fill="url(#starFacetShade)" />
+      <polygon points="256,225 256,292 262,232" fill="url(#starFacetWarm)" />
+
+      <!-- West Main Spike Facets -->
+      <polygon points="256,225 189,225 249,219" fill="url(#starFacetLight)" />
+      <polygon points="256,225 189,225 249,231" fill="url(#starFacetShade)" />
+
+      <!-- East Main Spike Facets -->
+      <polygon points="256,225 323,225 263,219" fill="url(#starFacetWarm)" />
+      <polygon points="256,225 323,225 263,231" fill="url(#starFacetShade)" />
+
+      <!-- North-East Diagonal Spike Facets -->
+      <polygon points="256,225 304,177 263,219" fill="url(#starFacetLight)" />
+      <polygon points="256,225 304,177 262,218" fill="url(#starFacetWarm)" />
+
+      <!-- North-West Diagonal Spike Facets -->
+      <polygon points="256,225 208,177 250,218" fill="url(#starFacetLight)" />
+      <polygon points="256,225 208,177 249,219" fill="url(#starFacetWarm)" />
+
+      <!-- South-West Diagonal Spike Facets -->
+      <polygon points="256,225 208,273 249,231" fill="url(#starFacetShade)" />
+      <polygon points="256,225 208,273 250,232" fill="url(#starFacetLight)" />
+
+      <!-- South-East Diagonal Spike Facets -->
+      <polygon points="256,225 304,273 263,231" fill="url(#starFacetWarm)" />
+      <polygon points="256,225 304,273 262,232" fill="url(#starFacetShade)" />
+
+      <!-- Star Inner Diamond Core Specular Highlight -->
+      <polygon points="256,218 263,225 256,232 249,225" fill="#ffffff" opacity="0.95" />
+      <circle cx="256" cy="225" r="3.5" fill="#ffffff" />
+    </g>
+
+    <!-- Subtle corner sparkles -->
+    <g transform="translate(452, 452) scale(0.6)">
+      <path d="M0 -15 Q0 0 15 0 Q0 0 0 15 Q0 0 -15 0 Q0 0 0 -15 Z" fill="#ffffff" opacity="0.45" />
+    </g>
+  </g>
+
+  <!-- Typography: Bright 10 -->
+  <g id="brand-text">
+    <text x="256" y="420" 
+          text-anchor="middle" 
+          font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Roboto, sans-serif" 
+          font-weight="800" 
+          font-size="52" 
+          letter-spacing="-1.5">
+      <tspan fill="#ffffff">Bright </tspan>
+      <tspan fill="url(#tenGrad)">10</tspan>
+    </text>
   </g>
 </svg>

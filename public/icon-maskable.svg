@@ -1,20 +1,104 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8" />
-      <stop offset="50%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#ec4899" />
+    <radialGradient id="bgGradMask" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#181920" />
+      <stop offset="55%" stop-color="#0b0c10" />
+      <stop offset="100%" stop-color="#040406" />
+    </radialGradient>
+    <radialGradient id="starGlowMask" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fffbeb" stop-opacity="1" />
+      <stop offset="25%" stop-color="#fde047" stop-opacity="0.8" />
+      <stop offset="60%" stop-color="#eab308" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#ca8a04" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="glassEdgeMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" />
+      <stop offset="50%" stop-color="#cbd5e1" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.75" />
     </linearGradient>
+    <linearGradient id="starFacetLightMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#fef08a" />
+    </linearGradient>
+    <linearGradient id="starFacetWarmMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="starFacetShadeMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+    <linearGradient id="tenGradMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f5d0a9" />
+    </linearGradient>
+    <filter id="softGlowMask" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
   </defs>
-  <rect width="512" height="512" fill="url(#bg)" />
-  <g transform="translate(51, 51) scale(0.8)">
-    <!-- Mortarboard Cap / Graduation Symbol -->
-    <path d="M256 120 L400 190 L256 260 L112 190 Z" fill="#ffffff" />
-    <path d="M160 216 V290 C160 340 352 340 352 290 V216 L256 264 Z" fill="#f8fafc" opacity="0.95" />
-    <!-- Tassel -->
-    <path d="M376 195 V280" stroke="#fde047" stroke-width="8" stroke-linecap="round" />
-    <circle cx="376" cy="285" r="10" fill="#fde047" />
-    <!-- Sparkle Star -->
-    <path d="M256 320 Q256 360 296 360 Q256 360 256 400 Q256 360 216 360 Q256 360 256 320 Z" fill="#fde047" />
+
+  <!-- Full bleed background for maskable icon -->
+  <rect width="512" height="512" fill="url(#bgGradMask)" />
+
+  <g transform="translate(0, -6)">
+    <!-- Book Back Layers -->
+    <path d="M148 140 C148 126, 160 120, 180 124 L244 138 C252 140, 256 142, 256 142 C256 142, 260 140, 268 138 L332 124 C352 120, 364 126, 364 140 L364 286 C364 298, 350 306, 332 308 L268 316 C260 317, 256 322, 256 322 C256 322, 252 317, 244 316 L180 308 C162 306, 148 298, 148 286 Z" 
+          fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="4" />
+    <path d="M156 134 C156 122, 168 116, 186 120 L246 134 C252 136, 256 138, 256 138 C256 138, 260 136, 266 134 L326 120 C344 116, 356 122, 356 134 L356 292 C356 302, 344 310, 328 312 L266 320 C260 321, 256 326, 256 326 C256 326, 252 321, 246 320 L184 312 C168 310, 156 302, 156 292 Z" 
+          fill="none" stroke="#ffffff" stroke-opacity="0.38" stroke-width="4.5" />
+
+    <!-- Left & Right Glass Book Body -->
+    <path d="M166 126 C166 114, 178 110, 196 114 L248 128 C253 130, 256 133, 256 135 L256 332 C256 332, 252 325, 244 324 L192 316 C174 313, 166 304, 166 292 Z"
+          fill="#ffffff" fill-opacity="0.18" stroke="url(#glassEdgeMask)" stroke-width="5" stroke-linejoin="round" />
+    <path d="M346 126 C346 114, 334 110, 316 114 L264 128 C259 130, 256 133, 256 135 L256 332 C256 332, 260 325, 268 324 L320 316 C338 313, 346 304, 346 292 Z"
+          fill="#ffffff" fill-opacity="0.18" stroke="url(#glassEdgeMask)" stroke-width="5" stroke-linejoin="round" />
+
+    <!-- Curved Leaf Overlays -->
+    <path d="M182 134 C210 148, 238 152, 256 142 L256 324 C238 320, 206 312, 182 288 Z"
+          fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.5" stroke-width="3" />
+    <path d="M330 134 C302 148, 274 152, 256 142 L256 324 C274 320, 306 312, 330 288 Z"
+          fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.5" stroke-width="3" />
+
+    <path d="M232 322 C242 334, 256 338, 256 338 C256 338, 270 334, 280 322"
+          fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" opacity="0.9" />
+
+    <!-- Star Glow -->
+    <circle cx="256" cy="225" r="95" fill="url(#starGlowMask)" opacity="0.8" filter="url(#softGlowMask)" />
+
+    <!-- Faceted Star -->
+    <g transform="translate(0, 0)">
+      <polygon points="256,225 256,158 250,218" fill="url(#starFacetLightMask)" />
+      <polygon points="256,225 256,158 262,218" fill="url(#starFacetWarmMask)" />
+      <polygon points="256,225 256,292 250,232" fill="url(#starFacetShadeMask)" />
+      <polygon points="256,225 256,292 262,232" fill="url(#starFacetWarmMask)" />
+      <polygon points="256,225 189,225 249,219" fill="url(#starFacetLightMask)" />
+      <polygon points="256,225 189,225 249,231" fill="url(#starFacetShadeMask)" />
+      <polygon points="256,225 323,225 263,219" fill="url(#starFacetWarmMask)" />
+      <polygon points="256,225 323,225 263,231" fill="url(#starFacetShadeMask)" />
+
+      <polygon points="256,225 304,177 263,219" fill="url(#starFacetLightMask)" />
+      <polygon points="256,225 304,177 262,218" fill="url(#starFacetWarmMask)" />
+      <polygon points="256,225 208,177 250,218" fill="url(#starFacetLightMask)" />
+      <polygon points="256,225 208,177 249,219" fill="url(#starFacetWarmMask)" />
+      <polygon points="256,225 208,273 249,231" fill="url(#starFacetShadeMask)" />
+      <polygon points="256,225 208,273 250,232" fill="url(#starFacetLightMask)" />
+      <polygon points="256,225 304,273 263,231" fill="url(#starFacetWarmMask)" />
+      <polygon points="256,225 304,273 262,232" fill="url(#starFacetShadeMask)" />
+
+      <polygon points="256,218 263,225 256,232 249,225" fill="#ffffff" opacity="0.95" />
+      <circle cx="256" cy="225" r="3.5" fill="#ffffff" />
+    </g>
   </g>
+
+  <!-- Typography: Bright 10 -->
+  <text x="256" y="420" 
+        text-anchor="middle" 
+        font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Roboto, sans-serif" 
+        font-weight="800" 
+        font-size="52" 
+        letter-spacing="-1.5">
+    <tspan fill="#ffffff">Bright </tspan>
+    <tspan fill="url(#tenGradMask)">10</tspan>
+  </text>
 </svg>

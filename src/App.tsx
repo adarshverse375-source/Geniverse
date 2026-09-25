@@ -40,6 +40,8 @@ import { PomodoroTimer } from './components/PomodoroTimer';
 import { StudyRoadmap } from './components/StudyRoadmap';
 import { QuizView } from './components/QuizView';
 import { cleanLatexMath } from './components/FormattedMessage';
+import { Bright10Logo } from './components/Bright10Logo';
+import { ImportantResourcesSection } from './components/ImportantResourcesSection';
 
 export default function App() {
   // --- Persistent State ---
@@ -428,24 +430,16 @@ export default function App() {
         >
           {/* Brand Logo & Info */}
           <div className="flex items-center gap-3.5">
-            <div 
-              id="app-brand-logo"
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white transition-all select-none ${
-                isMidnight 
-                  ? 'glass-panel shadow-[0_0_20px_rgba(56,189,248,0.35)] border border-white/20' 
-                  : 'shadow-[0_4px_0_0_rgba(0,0,0,0.12)] border-2 border-white/40 active:translate-y-[2px]'
-              }`}
-              style={{ background: `linear-gradient(135deg, ${subjectThemeBg}, #8b5cf6)` }}
-            >
-              <Sparkles className="w-6 h-6 text-white drop-shadow-sm" />
+            <div id="app-brand-logo" className="shrink-0">
+              <Bright10Logo size={50} glow={true} isMidnight={isMidnight} />
             </div>
             <div>
-              <h1 className={`text-2xl font-extrabold tracking-tight ${isMidnight ? 'font-jakarta text-white' : 'font-quicksand text-slate-900'}`}>
-                BRIGHTS <span className="gradient-text-clip font-black">Class 10</span>
+              <h1 className={`text-2xl font-extrabold tracking-tight flex items-center gap-1.5 ${isMidnight ? 'font-jakarta text-white' : 'font-quicksand text-slate-900'}`}>
+                Bright <span className="gradient-text-clip font-black">10</span>
               </h1>
               <p className="text-xs opacity-75 font-medium flex items-center gap-1.5 mt-0.5">
                 <GraduationCap className="w-3.5 h-3.5" />
-                Syllabus Chapter Study & Board Exam Prep
+                CBSE Class 10 Syllabus & Board Exam Prep
               </p>
             </div>
           </div>
@@ -895,11 +889,16 @@ export default function App() {
                         {activeChapter.formulasOrFacts.map((fact, idx) => (
                           <div 
                             key={idx}
-                            className={`p-3 rounded-lg text-xs font-semibold ${
-                              isMidnight ? 'bg-slate-900/60 text-[#cbc4d2]' : 'bg-white text-slate-800 shadow-sm border border-slate-200'
+                            className={`p-3 rounded-xl text-xs font-semibold border transition-all ${
+                              isMidnight 
+                                ? 'bg-slate-900/80 border-indigo-500/30 text-indigo-100 shadow-[0_2px_10px_rgba(99,102,241,0.1)]' 
+                                : 'bg-white text-slate-800 shadow-xs border-indigo-100 hover:border-indigo-300'
                             }`}
                           >
-                            {fact}
+                            <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-500 mr-1.5 inline-block">
+                              Formula
+                            </span>
+                            <span className="select-all font-mono font-bold">{cleanLatexMath(fact)}</span>
                           </div>
                         ))}
                       </div>
@@ -1057,6 +1056,13 @@ export default function App() {
                       <p className="text-sm opacity-60 text-center py-6">No study flashcards available for this section.</p>
                     )}
                   </section>
+
+                  {/* IMPORTANT RESOURCES: NCERT PDF DOWNLOADS & CBSE GUIDELINES */}
+                  <ImportantResourcesSection 
+                    isMidnight={isMidnight}
+                    selectedSubject={selectedSubject}
+                    selectedChapterId={selectedChapterId}
+                  />
                 </motion.div>
               )}
 
