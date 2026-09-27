@@ -246,28 +246,35 @@ export function detectFormulaLine(rawText: string): DetectedFormula | null {
   const line = rawText.trim();
   if (!line) return null;
 
+  // Reject long prose or explanatory sentences (real formulas are concise equations)
+  const normalWords = line.match(/\b[A-Za-z]{3,}\b/g) || [];
+  const hasExplicitTag = /^\[(EQUATION|FORMULA|REACTION|CHEMICAL_EQUATION)\]/i.test(line);
+  if (!hasExplicitTag && normalWords.length > 6) {
+    return null;
+  }
+
   // 1. Explicit tags: [EQUATION]...[/EQUATION], [FORMULA]...[/FORMULA], [REACTION]...[/REACTION]
   const tagMatch = line.match(/^\[(EQUATION|FORMULA|REACTION|CHEMICAL_EQUATION)\]([\s\S]*?)\[\/\1\]$/i);
   if (tagMatch) {
     const content = tagMatch[2].trim();
+    const tagWords = content.match(/\b[A-Za-z]{3,}\b/g) || [];
+    // Reject plain English paragraphs erroneously wrapped in equation tags
+    if (tagWords.length > 8 && !content.includes('\\frac') && !content.includes('→') && !content.includes('=')) {
+      return null;
+    }
     const isChem = /→|->|\(s\)|\(l\)|\(g\)|\(aq\)|H2O|CO2|NaCl|Ca\(OH\)|HCl|NaOH|SO4|CuSO/i.test(content);
     return {
       formulaText: content,
       category: isChem ? 'chemistry' : 'physics',
-      title: isChem ? 'Chemical Equation' : 'Formula / Law'
+      title: isChem ? 'Chemical Equation' : 'Equation'
     };
   }
 
-  // 2. Lines with bullet / bold / plain prefix like:
-  // "• Formula: V \propto I => V = IR"
-  // "• Key Formula: HCF(a, b) × LCM(a, b) = a × b"
-  // "• Chemical Equation: CaO + H₂O → Ca(OH)₂"
-  // "• Reaction: 2H₂ + O₂ → 2H₂O"
-  // "• Ohm's Law: V = IR"
-  // "Formula: V = IR"
-  // "Chemical Reaction: ..."
+  // 2. Lines with specific formula prefix:
+  // ONLY if label is specifically "Formula", "Key Formula", "Equation", "Chemical Equation", "Chemical Reaction"
+  // NOTE: We deliberately do NOT match "Law", "Physical Law", "Relation" to prevent normal sentences from being boxed!
   const prefixMatch = line.match(
-    /^([*•-]\s*)?(\*\*)?(Formula|Key Formula|Formulae|Equation|Chemical Equation|Balanced Chemical Equation|Chemical Reaction|Reaction|Mathematical Form|Mathematical Formula|Physical Law|Law|Relation)(\*\*)?\s*[:=]\s*(.+)$/i
+    /^([*•-]\s*)?(\*\*)?(Formula|Key Formula|Formulae|Equation|Chemical Equation|Balanced Chemical Equation|Chemical Reaction|Reaction)(\*\*)?\s*[:=]\s*(.+)$/i
   );
   if (prefixMatch) {
     const rawLabel = prefixMatch[3].trim();
@@ -275,20 +282,21 @@ export function detectFormulaLine(rawText: string): DetectedFormula | null {
     // Strip surrounding markdown bold / backticks if any
     expr = expr.replace(/^\*\*(.+)\*\*$/, '$1').replace(/^`(.+)`$/, '$1').trim();
 
-    // Check if the expression contains an actual formula (has =, ∝, →, \frac, +, ×, etc.)
-    const hasMathOrChem = /[=∝→⇒+\-×÷*/^√]|\b(frac|HCF|LCM|Area|sin|cos|tan)\b/i.test(expr);
-    if (hasMathOrChem) {
+    // Check if the expression contains an actual formula (has =, ∝, →, \frac, etc.)
+    const hasMathOrChem = /[=∝→⇒]|\b(frac|Area|sin|cos|tan)\b/i.test(expr);
+    const exprWords = expr.match(/\b[A-Za-z]{3,}\b/g) || [];
+    if (hasMathOrChem && exprWords.length <= 6) {
       const isChem = /chemical|reaction/i.test(rawLabel) || /→|->|\(s\)|\(l\)|\(g\)|\(aq\)/i.test(expr);
       return {
         formulaText: expr,
         category: isChem ? 'chemistry' : 'physics',
-        title: rawLabel
+        title: isChem ? 'Chemical Equation' : 'Formula'
       };
     }
   }
 
   // 3. Lines starting with \frac or mathematical relations like Area(ADE)/Area(BDE)
-  if (line.startsWith('\\frac{') || (line.startsWith('Area(') && line.includes('\\frac'))) {
+  if ((line.startsWith('\\frac{') || (line.startsWith('Area(') && line.includes('\\frac'))) && normalWords.length <= 4) {
     return {
       formulaText: line,
       category: 'math',
@@ -301,12 +309,12 @@ export function detectFormulaLine(rawText: string): DetectedFormula | null {
 
   // Chemical reaction with arrow (e.g., 2H₂ + O₂ → 2H₂O or CaO + H₂O -> Ca(OH)₂):
   const hasArrow = /(?:→|->|⇌|\\rightarrow)/.test(cleanLine);
-  const hasChemicalFormula = /\b(H[0-9₂]?|O[0-9₂₃]?|C[0-9]?|CO[0-9₂]?|H[0-9₂]?O|NaCl|CaO|Ca\(OH\)[0-9₂]?|CuSO[0-9₄]?|Fe|Zn|Mg|Al|HCl|NaOH|SO[0-9₄]?)\b|[A-Z][a-z]?[0-9₀-₉]/.test(cleanLine);
-  if (hasArrow && hasChemicalFormula && (cleanLine.includes('+') || /\([sgl]|aq\)/i.test(cleanLine) || /[A-Z][a-z]?[₀-₉0-9]/.test(cleanLine))) {
+  const hasChemicalSpecies = /\b(H[0-9₂]?|O[0-9₂₃]?|C[0-9]?|CO[0-9₂]?|H[0-9₂]?O|NaCl|CaO|Ca\(OH\)[0-9₂]?|CuSO[0-9₄]?|Fe|Zn|Mg|Al|HCl|NaOH|SO[0-9₄]?|CH[0-9₄]?)\b|[A-Z][a-z]?[0-9₀-₉]/.test(cleanLine);
+  if (hasArrow && hasChemicalSpecies && (cleanLine.includes('+') || /\([sgl]|aq\)/i.test(cleanLine)) && normalWords.length <= 3) {
     return {
       formulaText: cleanLine,
       category: 'chemistry',
-      title: 'Chemical Reaction'
+      title: 'Chemical Equation'
     };
   }
 
@@ -325,11 +333,11 @@ export function detectFormulaLine(rawText: string): DetectedFormula | null {
     /^(x\s*=\s*\\frac\{-b\s*\\pm\s*\\sqrt\{b²\s*-\s*4ac\}\}\{2a\}).*$/i.test(cleanLine) ||
     /^(D\s*=\s*b²\s*-\s*4ac)$/i.test(cleanLine);
 
-  if (isCoreFormula) {
+  if (isCoreFormula && normalWords.length <= 4) {
     return {
       formulaText: cleanLine,
       category: 'physics',
-      title: 'Formula & Law'
+      title: 'Formula'
     };
   }
 
@@ -352,7 +360,7 @@ export const FormulaCalloutBox: React.FC<FormulaCalloutBoxProps> = ({
   const [copied, setCopied] = React.useState(false);
 
   const isChem = category === 'chemistry';
-  const displayTitle = title || (isChem ? 'Chemical Equation' : 'Formula / Law');
+  const displayTitle = title || (isChem ? 'Chemical Equation' : category === 'math' ? 'Mathematical Formula' : 'Formula');
   const icon = isChem ? '🧪' : category === 'physics' ? '⚡' : '📐';
 
   const handleCopy = () => {

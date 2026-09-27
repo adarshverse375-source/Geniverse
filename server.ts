@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Supported models for Chat
-export type ChatModelChoice = "gemini-2.5-flash" | "gemini-2.5-flash-lite" | "gemini-3.5-flash" | "gemini-3.5-flash-lite" | "gemini-3.1-flash-lite";
+export type ChatModelChoice = "gemini-3.8-flash" | "gemini-3.1-flash-lite" | "gemini-3.5-flash";
 export type ChatRoleChoice = "general" | "examiner" | "stem" | "speed_drill" | "humanities";
 
 const ROLE_SYSTEM_INSTRUCTIONS: Record<ChatRoleChoice, string> = {
@@ -49,23 +49,26 @@ CRITICAL FORMATTING RULES FOR CLEAN, PROFESSIONAL PRESENTATION:
    - "★ Given & To Prove:"
    - "▶ Proof / Derivation:"
    - "💡 High-Yield Board Exam Tip:"
-2. ALL MATHEMATICAL FORMULAS, EQUATIONS & CHEMICAL REACTIONS MUST BE BOXED:
-   - EVERY formula, physical law, mathematical equation, numerical formula, or chemical reaction MUST be put on its own line wrapped in:
+2. REAL MATHEMATICAL FORMULAS & EQUATIONS ONLY:
+   - ONLY wrap genuine algebraic formulas, physics equations, or balanced chemical reactions in:
      [EQUATION] <formula or equation> [/EQUATION]
-   - Examples of how you MUST format every formula and equation:
+   - Examples of genuine formulas to wrap:
      * Ohm's Law: [EQUATION] V = IR [/EQUATION]
      * Proportionality: [EQUATION] V ∝ I ⇒ V = IR [/EQUATION]
      * HCF & LCM: [EQUATION] HCF(a, b) × LCM(a, b) = a × b [/EQUATION]
      * Lens Formula: [EQUATION] \frac{1}{f} = \frac{1}{v} - \frac{1}{u} [/EQUATION]
      * Mirror Formula: [EQUATION] \frac{1}{f} = \frac{1}{v} + \frac{1}{u} [/EQUATION]
      * Quadratic Formula: [EQUATION] x = \frac{-b ± \sqrt{b² - 4ac}}{2a} [/EQUATION]
-     * Chemical Reactions: [EQUATION] 2H₂(g) + O₂(g) → 2H₂O(l) [/EQUATION]
+     * Balanced Chemical Reactions: [EQUATION] 2H₂(g) + O₂(g) → 2H₂O(l) [/EQUATION]
      * Slaking of Lime: [EQUATION] CaO(s) + H₂O(l) → Ca(OH)₂(aq) + Heat [/EQUATION]
      * Resistors in Series / Parallel: [EQUATION] R_s = R_1 + R_2 [/EQUATION] or [EQUATION] \frac{1}{R_p} = \frac{1}{R_1} + \frac{1}{R_2} [/EQUATION]
      * Resistance & Resistivity: [EQUATION] R = \rho \frac{l}{A} [/EQUATION]
-   - CRITICAL: NEVER write formulas as plain bullet points (e.g. NEVER write "• Formula: V = IR"). ALWAYS wrap them in [EQUATION] ... [/EQUATION] so the application renders a dedicated, prominent formula callout box!
+   - CRITICAL RULES FOR BOXES:
+     * DO NOT force or fabricate formula boxes in every response. If an explanation is conceptual, qualitative, historical, or literary, DO NOT create a formula box!
+     * NEVER wrap verbal law statements (e.g. "Newton's First Law states that...", "Law of Conservation of Mass: Mass can neither be created...") in [EQUATION]. Only wrap real algebraic equations or balanced chemical reaction equations.
+     * DO NOT use [EQUATION] for general text, definitions, or English/Social Science concepts.
    - Write standard symbols: ∝ (proportional), Ω (Ohms), ρ (resistivity), ×, ÷, ±, √, π, θ, cm², m/s², x².
-   - For real fractions with numerator and denominator, write: \frac{numerator}{denominator} (e.g. \frac{Area(ADE)}{Area(BDE)} = \frac{AD}{DB} or \frac{1}{2} × base × height).
+   - For real fractions with numerator and denominator, write: \frac{numerator}{denominator}.
    - NEVER wrap plain numbers, scores, marks, or units in dollar signs (NEVER write $2.5$, $3$, $10$, $cm$, $\Omega$). Write "2.5 marks", "3 marks", "Ω", "cm²".
    - DO NOT wrap entire sentences in dollar signs ($ or $$).
 3. FIGURES, DIAGRAMS & ILLUSTRATIONS:
@@ -94,16 +97,13 @@ function withTimeout<T>(promise: Promise<T>, ms: number, errorMsg = "Operation t
 
 function getOrderedModelList(preferredModel?: string): string[] {
   const list: string[] = [];
-  if (preferredModel && ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.5-flash"].includes(preferredModel)) {
+  if (preferredModel && ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash"].includes(preferredModel)) {
     list.push(preferredModel);
-  } else if (preferredModel === "gemini-3.5-flash-lite") {
-    list.push("gemini-2.5-flash-lite");
   } else {
-    list.push("gemini-2.5-flash");
+    list.push("gemini-3.8-flash");
   }
   const alternates = [
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
+    "gemini-3.8-flash",
     "gemini-3.1-flash-lite",
     "gemini-3.5-flash"
   ];
@@ -448,7 +448,7 @@ async function startServer() {
     }
 
     // Attempt 2: AI-Generated SVG Vector Diagram with multi-tier model fallback
-    const svgModelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.5-flash"];
+    const svgModelsToTry = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash"];
     const svgPrompt = `You are an expert CBSE Class 10 educational illustrator.
 Create a complete, visually clean, self-contained SVG diagram for: "${prompt}" (Subject: ${subject || "CBSE Class 10"}, Chapter: ${chapter || "Board Exam Prep"}).
 
@@ -648,7 +648,7 @@ Strict Requirements:
 The questions must align perfectly with the latest CBSE syllabus and Board exam patterns. Ensure varying difficulty (easy, medium, hard). Provide 4 options for each question, specify the correct answer option index (0 to 3), and write a concise, clear educational explanation.
 CRITICAL FORMATTING: Do NOT use LaTeX dollar signs ($) around equations, numbers, or units. Use clean Unicode characters (e.g. x², cm², ×, ÷, √).`;
 
-      const quizModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.5-flash"];
+      const quizModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash"];
       let parsedQuestions = null;
 
       for (const m of quizModels) {

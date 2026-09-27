@@ -30,6 +30,7 @@ interface GeminiChatbotProps {
   activeSubject: SubjectType;
   activeChapterName: string;
   onRewardXP: (amount: number, reason: string) => void;
+  isCompact?: boolean;
 }
 
 const ROLES_CONFIG: Record<ChatRoleChoice, { title: string; subtitle: string; icon: React.ElementType; badgeColor: string }> = {
@@ -66,29 +67,19 @@ const ROLES_CONFIG: Record<ChatRoleChoice, { title: string; subtitle: string; ic
 };
 
 const MODELS_CONFIG: Record<ChatModelChoice, { name: string; tag: string; icon: React.ElementType }> = {
-  'gemini-2.5-flash': {
-    name: 'Bright 10 Pro',
-    tag: 'Highest Reliability & Detail (Recommended)',
+  'gemini-3.8-flash': {
+    name: 'Bright 10 Flash',
+    tag: 'Ultra Fast & High Accuracy (Recommended)',
     icon: Sparkles
-  },
-  'gemini-2.5-flash-lite': {
-    name: 'Bright 10 Turbo',
-    tag: 'Ultra Fast & High Availability',
-    icon: Zap
-  },
-  'gemini-3.5-flash': {
-    name: 'Bright 10 Frontier',
-    tag: 'Next-Gen Frontier Intelligence',
-    icon: Brain
-  },
-  'gemini-3.5-flash-lite': {
-    name: 'Bright 10 Fast',
-    tag: 'Lightweight Tasks',
-    icon: Zap
   },
   'gemini-3.1-flash-lite': {
     name: 'Bright 10 Lite',
-    tag: 'Quick Revisions',
+    tag: 'Economical & High Speed Revisions',
+    icon: Zap
+  },
+  'gemini-3.5-flash': {
+    name: 'Bright 10 Pro',
+    tag: 'Advanced Reasoning & Proofs',
     icon: Brain
   }
 };
@@ -98,6 +89,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
   activeSubject,
   activeChapterName,
   onRewardXP,
+  isCompact = false,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem('cbse_brights_chat_history');
@@ -113,9 +105,9 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
       {
         id: 'welcome-1',
         sender: 'ai',
-        text: `Namaste! 👋 I'm your CBSE Class 10 study companion powered by **Bright 10 AI**.\n\nWe're currently focusing on **${activeSubject}: ${activeChapterName}**. How can I help you today? You can ask for step-by-step mathematical proofs, key NCERT concepts, high-yield board marking rubrics, take a rapid-fire drill, or use **Image Generation** to visualize diagrams!`,
+        text: `Namaste! 👋 I'm **Bright AI**, your CBSE Class 10 academic companion.\n\nWe're currently focusing on **${activeSubject}: ${activeChapterName}**. How can I assist you today? You can ask for step-by-step mathematical proofs, key NCERT concepts, high-yield board marking rubrics, take a rapid-fire drill, or use **Image Generation** to visualize diagrams!`,
         timestamp: Date.now(),
-        modelUsed: 'gemini-2.5-flash',
+        modelUsed: 'gemini-3.8-flash',
         roleUsed: 'general'
       }
     ];
@@ -124,13 +116,14 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<ChatModelChoice>('gemini-2.5-flash');
+  const [selectedModel, setSelectedModel] = useState<ChatModelChoice>('gemini-3.8-flash');
   const [selectedRole, setSelectedRole] = useState<ChatRoleChoice>('general');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -155,9 +148,16 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
     localStorage.setItem('cbse_brights_chat_history', JSON.stringify(messages));
   }, [messages]);
 
-  // Auto scroll to latest message
+  // Auto scroll to latest message smoothly without shaking outer window
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    } else {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages, isLoading]);
 
   const handleSend = async (overridePrompt?: string) => {
@@ -274,65 +274,67 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
 
   return (
     <div 
-      className={`flex flex-col h-[740px] rounded-3xl overflow-hidden transition-all border ${
-        isMidnight 
-          ? 'glass-panel border-slate-700/80 shadow-[0_15px_40px_rgba(0,0,0,0.5)]' 
-          : 'bg-white border-2 border-slate-200 shadow-[6px_6px_0px_0px_rgba(226,232,240,1)]'
+      className={`flex flex-col h-full w-full overflow-hidden transition-all ${
+        isCompact 
+          ? 'bg-transparent border-0' 
+          : isMidnight 
+            ? 'glass-panel border-slate-700/80 shadow-[0_15px_40px_rgba(0,0,0,0.5)] rounded-3xl' 
+            : 'bg-white border-2 border-slate-200 shadow-[6px_6px_0px_0px_rgba(226,232,240,1)] rounded-3xl'
       }`}
     >
-      {/* Top Header Bar */}
-      <div className="p-4 border-b border-slate-200/50 bg-slate-500/5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="relative shrink-0">
-            <Bright10Logo size={42} glow={false} />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full ring-2 ring-white dark:ring-slate-900" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm md:text-base font-extrabold text-slate-900 dark:text-white">
-                Bright 10 CBSE AI Mentor
-              </h3>
-              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                Multi-Turn Active
-              </span>
+      {/* Top Header Bar (Only shown in standalone mode) */}
+      {!isCompact && (
+        <div className="p-4 border-b border-slate-200/50 bg-slate-500/5 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative shrink-0">
+              <Bright10Logo size={42} subject={activeSubject} glow={false} />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full ring-2 ring-white dark:ring-slate-900" />
             </div>
-            <p className="text-xs opacity-65 font-medium">
-              Studying: <span className="font-bold text-indigo-500">{activeSubject}</span> &bull; {activeChapterName}
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm md:text-base font-black font-heading text-slate-900 dark:text-white">
+                  Bright AI
+                </h3>
+                <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                  Interactive
+                </span>
+              </div>
+              <p className="text-xs opacity-65 font-medium">
+                Studying: <span className="font-bold text-indigo-500">{activeSubject}</span> &bull; {activeChapterName}
+              </p>
+            </div>
+          </div>
+
+          {/* Utility Actions */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsImageModalOpen(true)}
+              className={`py-1.5 px-3 rounded-xl border font-bold flex items-center gap-1.5 transition-all shadow-xs ${
+                isMidnight 
+                  ? 'bg-gradient-to-r from-sky-500/20 via-indigo-500/20 to-purple-500/20 border-sky-500/40 text-sky-300 hover:brightness-110' 
+                  : 'bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 border-sky-300 text-sky-800 hover:border-sky-400'
+              }`}
+              title="Open AI Image Generation Studio"
+            >
+              <Palette className="w-3.5 h-3.5 text-sky-500" />
+              <span className="text-xs font-black">Image Generation</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sky-500 text-white font-black">AI</span>
+            </button>
+
+            <button
+              onClick={handleClearHistory}
+              className="p-2 rounded-xl opacity-60 hover:opacity-100 hover:bg-slate-500/10 text-xs transition-all flex items-center gap-1.5"
+              title="Clear Chat History"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="text-xs">Clear Chat</span>
+            </button>
           </div>
         </div>
-
-        {/* Utility Actions */}
-        <div className="flex items-center gap-2">
-          {/* Image Generation Studio Button */}
-          <button
-            onClick={() => setIsImageModalOpen(true)}
-            className={`py-1.5 px-3 rounded-xl border font-bold flex items-center gap-1.5 transition-all shadow-xs ${
-              isMidnight 
-                ? 'bg-gradient-to-r from-sky-500/20 via-indigo-500/20 to-purple-500/20 border-sky-500/40 text-sky-300 hover:brightness-110' 
-                : 'bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 border-sky-300 text-sky-800 hover:border-sky-400'
-            }`}
-            title="Open AI Image Generation Studio"
-          >
-            <Palette className="w-3.5 h-3.5 text-sky-500" />
-            <span className="text-xs font-black">Image Generation</span>
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sky-500 text-white font-black">AI</span>
-          </button>
-
-          {/* Clear history */}
-          <button
-            onClick={handleClearHistory}
-            className="p-2 rounded-xl opacity-60 hover:opacity-100 hover:bg-slate-500/10 text-xs transition-all flex items-center gap-1.5"
-            title="Clear Chat History"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span className="text-xs">Clear Chat</span>
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Role & Model Controls Selector Row */}
-      <div className="px-4 py-2.5 border-b border-slate-200/40 bg-slate-500/5 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div className="px-3.5 py-2 border-b border-slate-200/40 dark:border-white/10 bg-slate-500/5 flex flex-wrap items-center justify-between gap-2 text-xs">
         <div className="flex flex-wrap items-center gap-2">
           {/* Role Dropdown */}
           <div className="relative">
@@ -341,7 +343,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
                 setIsRoleDropdownOpen(!isRoleDropdownOpen);
                 setIsModelDropdownOpen(false);
               }}
-              className={`py-1.5 px-3 rounded-xl border font-bold flex items-center gap-2 transition-all ${
+              className={`py-1.5 px-2.5 rounded-xl border font-bold flex items-center gap-2 transition-all ${
                 isMidnight 
                   ? 'bg-slate-900/80 border-slate-700 hover:border-slate-600 text-slate-200' 
                   : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700 shadow-xs'
@@ -349,15 +351,15 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
             >
               <RoleIcon className="w-3.5 h-3.5 text-indigo-400" />
               <div className="flex flex-col text-left">
-                <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold leading-none">AI Role</span>
-                <span className="text-xs">{activeRoleData.title}</span>
+                <span className="text-[8px] uppercase tracking-wider text-slate-400 font-bold leading-none">Role</span>
+                <span className="text-[11px] font-extrabold">{activeRoleData.title}</span>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 opacity-60 ml-1" />
+              <ChevronDown className="w-3.5 h-3.5 opacity-60 ml-0.5" />
             </button>
 
             {isRoleDropdownOpen && (
               <div 
-                className={`absolute left-0 top-full mt-1.5 w-64 rounded-2xl p-2 z-20 border shadow-xl ${
+                className={`absolute left-0 top-full mt-1.5 w-64 rounded-2xl p-2 z-30 border shadow-xl ${
                   isMidnight ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-800'
                 }`}
               >
@@ -400,7 +402,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
                 setIsModelDropdownOpen(!isModelDropdownOpen);
                 setIsRoleDropdownOpen(false);
               }}
-              className={`py-1.5 px-3 rounded-xl border font-bold flex items-center gap-2 transition-all ${
+              className={`py-1.5 px-2.5 rounded-xl border font-bold flex items-center gap-2 transition-all ${
                 isMidnight 
                   ? 'bg-slate-900/80 border-slate-700 hover:border-slate-600 text-slate-200' 
                   : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700 shadow-xs'
@@ -408,15 +410,15 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
             >
               <ModelIcon className="w-3.5 h-3.5 text-pink-400" />
               <div className="flex flex-col text-left">
-                <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold leading-none">Model</span>
-                <span className="text-xs">{activeModelData.name}</span>
+                <span className="text-[8px] uppercase tracking-wider text-slate-400 font-bold leading-none">Model</span>
+                <span className="text-[11px] font-extrabold">{activeModelData.name}</span>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 opacity-60 ml-1" />
+              <ChevronDown className="w-3.5 h-3.5 opacity-60 ml-0.5" />
             </button>
 
             {isModelDropdownOpen && (
               <div 
-                className={`absolute left-0 top-full mt-1.5 w-64 rounded-2xl p-2 z-20 border shadow-xl ${
+                className={`absolute left-0 top-full mt-1.5 w-64 rounded-2xl p-2 z-30 border shadow-xl ${
                   isMidnight ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-800'
                 }`}
               >
@@ -453,14 +455,43 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
           </div>
         </div>
 
-        {/* Current Active Role Badge */}
-        <span className={`text-[10px] font-black uppercase tracking-wider py-1 px-2.5 rounded-full border ${activeRoleData.badgeColor}`}>
-          Active: {activeRoleData.title}
-        </span>
+        {/* Compact Mode: Show Image Generation & Clear buttons here */}
+        {isCompact ? (
+          <div className="flex items-center gap-1.5 ml-auto">
+            <button
+              onClick={() => setIsImageModalOpen(true)}
+              className={`py-1 px-2.5 rounded-lg border text-[11px] font-extrabold flex items-center gap-1.5 transition-all ${
+                isMidnight 
+                  ? 'bg-sky-500/15 border-sky-500/30 text-sky-300 hover:bg-sky-500/25' 
+                  : 'bg-sky-50 border-sky-200 text-sky-800 hover:bg-sky-100'
+              }`}
+              title="Open AI Image Generation Studio"
+            >
+              <Palette className="w-3 h-3 text-sky-400" />
+              <span>Generate Image</span>
+            </button>
+
+            <button
+              onClick={handleClearHistory}
+              className="p-1.5 rounded-lg opacity-60 hover:opacity-100 hover:bg-slate-500/10 transition-all"
+              title="Clear Chat History"
+              aria-label="Clear chat"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <span className={`text-[10px] font-black uppercase tracking-wider py-1 px-2.5 rounded-full border ${activeRoleData.badgeColor}`}>
+            Active: {activeRoleData.title}
+          </span>
+        )}
       </div>
 
       {/* Scrollable Message Thread */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-4 md:p-5 space-y-4"
+      >
         {messages.map((msg) => {
           const isAi = msg.sender === 'ai';
           const roleInfo = msg.roleUsed ? ROLES_CONFIG[msg.roleUsed] : null;
@@ -468,18 +499,18 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
           return (
             <div 
               key={msg.id} 
-              className={`flex ${isAi ? 'justify-start' : 'justify-end'} items-start gap-2.5 group`}
+              className={`flex ${isAi ? 'justify-start' : 'justify-end'} items-start gap-2 group`}
             >
               {isAi && (
-                <div className="shrink-0 mt-1">
-                  <Bright10Logo size={28} glow={false} />
+                <div className="shrink-0 mt-0.5">
+                  <Bright10Logo size={isCompact ? 24 : 28} subject={activeSubject} glow={false} />
                 </div>
               )}
 
-              <div className={`max-w-[85%] sm:max-w-[78%] flex flex-col ${isAi ? 'items-start' : 'items-end'}`}>
+              <div className={`max-w-[88%] sm:max-w-[82%] flex flex-col ${isAi ? 'items-start' : 'items-end'}`}>
                 {/* Message Bubble */}
                 <div 
-                  className={`p-3.5 md:p-4 rounded-2xl text-xs md:text-sm leading-relaxed ${
+                  className={`${isCompact ? 'p-2.5 sm:p-3 text-xs sm:text-[13px]' : 'p-3.5 md:p-4 text-xs md:text-sm'} rounded-2xl leading-relaxed ${
                     isAi
                       ? isMidnight
                         ? 'bg-slate-800/85 text-slate-100 border border-slate-700/70 rounded-tl-none shadow-sm'
@@ -610,13 +641,9 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
               }`}
             >
               <Sparkles className="w-4 h-4 text-violet-500 animate-spin" />
-              <span className="font-bold">
-                {selectedModel === 'gemini-3.5-flash-lite' 
-                  ? 'Bright AI Fast is computing high-speed response...' 
-                  : selectedModel === 'gemini-3.1-flash-lite'
-                    ? 'Bright AI Lite is firing rapid answer...'
-                    : 'Bright AI 2.0 is formulating comprehensive response...'}
-              </span>
+                {selectedModel === 'gemini-3.1-flash-lite'
+                  ? 'Bright AI Lite is firing rapid answer...'
+                  : 'Bright AI is formulating comprehensive response...'}
             </div>
           </div>
         )}
