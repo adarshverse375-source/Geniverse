@@ -59,7 +59,7 @@ export const BADGES: Badge[] = [
   { id: 'legend', title: 'Topper Board-Ready', description: 'Cross 500 points to become fully Board-Exam Ready', iconName: 'Flame', unlockedAtPoints: 500 },
 ];
 
-export type ChatModelChoice = 'gemini-3.8-flash' | 'gemini-3.1-flash-lite' | 'gemini-3.5-flash';
+export type ChatModelChoice = 'gemini-3.8-flash' | 'gemini-3.1-flash-lite' | 'gemini-flash-latest' | 'gemini-3.5-flash';
 
 export type ChatRoleChoice = 'general' | 'examiner' | 'stem' | 'speed_drill' | 'humanities';
 

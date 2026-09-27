@@ -77,9 +77,14 @@ const MODELS_CONFIG: Record<ChatModelChoice, { name: string; tag: string; icon: 
     tag: 'Economical & High Speed Revisions',
     icon: Zap
   },
+  'gemini-flash-latest': {
+    name: 'Bright 10 Pro',
+    tag: 'Latest Production Flash Engine',
+    icon: Brain
+  },
   'gemini-3.5-flash': {
     name: 'Bright 10 Pro',
-    tag: 'Advanced Reasoning & Proofs',
+    tag: 'High-Yield Board Prep',
     icon: Brain
   }
 };

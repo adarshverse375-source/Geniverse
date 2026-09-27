@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Supported models for Chat
-export type ChatModelChoice = "gemini-3.8-flash" | "gemini-3.1-flash-lite" | "gemini-3.5-flash";
+export type ChatModelChoice = "gemini-3.8-flash" | "gemini-3.1-flash-lite" | "gemini-flash-latest";
 export type ChatRoleChoice = "general" | "examiner" | "stem" | "speed_drill" | "humanities";
 
 const ROLE_SYSTEM_INSTRUCTIONS: Record<ChatRoleChoice, string> = {
@@ -96,8 +96,9 @@ function withTimeout<T>(promise: Promise<T>, ms: number, errorMsg = "Operation t
 }
 
 function getOrderedModelList(preferredModel?: string): string[] {
+  const validModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
   const list: string[] = [];
-  if (preferredModel && ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash"].includes(preferredModel)) {
+  if (preferredModel && validModels.includes(preferredModel)) {
     list.push(preferredModel);
   } else {
     list.push("gemini-3.8-flash");
@@ -105,7 +106,7 @@ function getOrderedModelList(preferredModel?: string): string[] {
   const alternates = [
     "gemini-3.8-flash",
     "gemini-3.1-flash-lite",
-    "gemini-3.5-flash"
+    "gemini-flash-latest"
   ];
   for (const alt of alternates) {
     if (!list.includes(alt)) list.push(alt);
@@ -448,7 +449,7 @@ async function startServer() {
     }
 
     // Attempt 2: AI-Generated SVG Vector Diagram with multi-tier model fallback
-    const svgModelsToTry = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash"];
+    const svgModelsToTry = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
     const svgPrompt = `You are an expert CBSE Class 10 educational illustrator.
 Create a complete, visually clean, self-contained SVG diagram for: "${prompt}" (Subject: ${subject || "CBSE Class 10"}, Chapter: ${chapter || "Board Exam Prep"}).
 
@@ -467,7 +468,7 @@ Strict Requirements:
               temperature: 0.2,
             },
           }),
-          4000,
+          12000,
           `SVG generation timed out on ${m}`
         );
 
@@ -503,7 +504,7 @@ Strict Requirements:
       const {
         message,
         history,
-        model = "gemini-3.5-flash",
+        model = "gemini-3.8-flash",
         role = "general",
         subject,
         chapter,
@@ -564,7 +565,7 @@ Strict Requirements:
 
           const response = await withTimeout(
             chat.sendMessage({ message }),
-            8000,
+            28000,
             `Chat message timed out on ${candidate}`
           );
           if (response.text && response.text.trim()) {
@@ -583,7 +584,7 @@ Strict Requirements:
       if (!responseText) {
         console.warn("All candidate Gemini models temporarily unavailable. Delivering curriculum mentor response.");
         responseText = generateSyllabusFallbackResponse(message, subject, chapter, role);
-        actualModelUsed = "gemini-3.5-flash-lite";
+        actualModelUsed = "gemini-3.1-flash-lite";
       }
 
       let generatedImage: { imageUrl?: string; svgContent?: string; prompt?: string; type?: string } | null = null;
@@ -627,7 +628,7 @@ Strict Requirements:
       // Even on unhandled error, provide a helpful response instead of breaking
       res.json({
         text: "✦ CBSE Academic Mentor: I am ready to help you with formulas, step-by-step proofs, and marking schemes. Please enter your question again to continue!",
-        modelUsed: "gemini-3.5-flash-lite",
+        modelUsed: "gemini-3.1-flash-lite",
         roleUsed: "general",
       });
     }
@@ -648,7 +649,7 @@ Strict Requirements:
 The questions must align perfectly with the latest CBSE syllabus and Board exam patterns. Ensure varying difficulty (easy, medium, hard). Provide 4 options for each question, specify the correct answer option index (0 to 3), and write a concise, clear educational explanation.
 CRITICAL FORMATTING: Do NOT use LaTeX dollar signs ($) around equations, numbers, or units. Use clean Unicode characters (e.g. x², cm², ×, ÷, √).`;
 
-      const quizModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash"];
+      const quizModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
       let parsedQuestions = null;
 
       for (const m of quizModels) {
@@ -688,7 +689,7 @@ CRITICAL FORMATTING: Do NOT use LaTeX dollar signs ($) around equations, numbers
                 },
               },
             }),
-            5000,
+            22000,
             `Quiz generation timed out on ${m}`
           );
 
