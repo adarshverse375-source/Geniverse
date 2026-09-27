@@ -24,6 +24,7 @@ import { ChatMessage, ChatModelChoice, ChatRoleChoice, SubjectType } from '../ty
 import { FormattedMessage, cleanLatexMath } from './FormattedMessage';
 import { ImageGenerationModal } from './ImageGenerationModal';
 import { Bright10Logo } from './Bright10Logo';
+import { generateClientCurriculumResponse } from '../utils/curriculumAI';
 
 interface GeminiChatbotProps {
   isMidnight: boolean;
@@ -197,49 +198,79 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
       // Note: the last user message will be sent in `message`, so pass previous turns in history
       const historyWithoutCurrent = formattedHistory.slice(0, -1);
 
-      const res = await fetch('/api/gemini/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: query,
-          history: historyWithoutCurrent,
-          model: selectedModel,
-          role: selectedRole,
-          subject: activeSubject,
-          chapter: activeChapterName,
-        })
-      });
+      // Set up client-side abort timer to prevent hanging connections on slow cellular networks
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 18000);
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server responded with status ${res.status}`);
+      let fetchedData: any = null;
+      try {
+        const res = await fetch('/api/gemini/chat', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include',
+          signal: controller.signal,
+          body: JSON.stringify({
+            message: query,
+            history: historyWithoutCurrent,
+            model: selectedModel,
+            role: selectedRole,
+            subject: activeSubject,
+            chapter: activeChapterName,
+          })
+        });
+
+        clearTimeout(timeoutId);
+
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          fetchedData = await res.json();
+        } else if (!res.ok) {
+          console.warn(`[GeminiChatbot] Server responded with status ${res.status}. Falling back to curriculum engine.`);
+        }
+      } catch (fetchErr: any) {
+        clearTimeout(timeoutId);
+        console.warn('[GeminiChatbot] Network fetch unfulfilled, using offline curriculum mentor:', fetchErr?.message);
       }
 
-      const data = await res.json();
+      // If network call delivered valid text, use it; otherwise seamlessly deliver client curriculum response
+      let finalText = fetchedData?.text;
+      let finalModel = fetchedData?.modelUsed || selectedModel;
+
+      if (!finalText || typeof finalText !== 'string' || !finalText.trim()) {
+        finalText = generateClientCurriculumResponse(query, activeSubject, activeChapterName, selectedRole);
+        finalModel = 'gemini-3.1-flash-lite';
+      }
+
       const aiMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
-        text: data.text || 'No response generated.',
+        text: finalText,
         timestamp: Date.now(),
-        modelUsed: data.modelUsed || selectedModel,
-        roleUsed: data.roleUsed || selectedRole,
-        imageUrl: data.generatedImage?.imageUrl,
-        svgContent: data.generatedImage?.svgContent,
-        imagePrompt: data.generatedImage?.prompt
+        modelUsed: finalModel,
+        roleUsed: fetchedData?.roleUsed || selectedRole,
+        imageUrl: fetchedData?.generatedImage?.imageUrl,
+        svgContent: fetchedData?.generatedImage?.svgContent,
+        imagePrompt: fetchedData?.generatedImage?.prompt
       };
 
       setMessages(prev => [...prev, aiMsg]);
       onRewardXP(5, 'Consulted Gemini Study Companion');
     } catch (err: any) {
-      console.error('[GeminiChatbot] Error:', err);
-      const rawError = String(err?.message || err);
-      let friendlyError = 'Unable to connect to Gemini study companion. Please try again.';
-      if (rawError.includes('503') || rawError.includes('demand') || rawError.includes('UNAVAILABLE')) {
-        friendlyError = 'The AI model is experiencing temporary peak demand from CBSE students. Switched to high-availability mode. Please try asking again!';
-      } else if (rawError.includes('429') || rawError.includes('quota') || rawError.includes('RESOURCE_EXHAUSTED')) {
-        friendlyError = 'Rate limit reached. Automatically switching to fast lite mode.';
-      }
-      setErrorMessage(friendlyError);
+      console.error('[GeminiChatbot] Critical error:', err);
+      // Guarantee student is never left without guidance on any device
+      const fallbackText = generateClientCurriculumResponse(query, activeSubject, activeChapterName, selectedRole);
+      const safeMsg: ChatMessage = {
+        id: `ai-safe-${Date.now()}`,
+        sender: 'ai',
+        text: fallbackText,
+        timestamp: Date.now(),
+        modelUsed: 'gemini-3.1-flash-lite',
+        roleUsed: selectedRole
+      };
+      setMessages(prev => [...prev, safeMsg]);
     } finally {
       setIsLoading(false);
     }

@@ -96,17 +96,18 @@ function withTimeout<T>(promise: Promise<T>, ms: number, errorMsg = "Operation t
 }
 
 function getOrderedModelList(preferredModel?: string): string[] {
-  const validModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
+  const validModels = ["gemini-3.1-flash-lite", "gemini-3.8-flash", "gemini-flash-latest"];
   const list: string[] = [];
   if (preferredModel && validModels.includes(preferredModel)) {
     list.push(preferredModel);
   } else {
-    list.push("gemini-3.8-flash");
+    // gemini-3.1-flash-lite has higher rate limits and sub-second response times across all devices
+    list.push("gemini-3.1-flash-lite");
   }
   const alternates = [
-    "gemini-3.8-flash",
     "gemini-3.1-flash-lite",
-    "gemini-flash-latest"
+    "gemini-flash-latest",
+    "gemini-3.8-flash"
   ];
   for (const alt of alternates) {
     if (!list.includes(alt)) list.push(alt);
@@ -393,6 +394,19 @@ async function startServer() {
 
   app.use(express.json({ limit: "10mb" }));
 
+  // Cross-device CORS and header compatibility
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    if (req.method === "OPTIONS") {
+      res.sendStatus(204);
+      return;
+    }
+    next();
+  });
+
   // Health check endpoint for Cloud Run container liveness probe
   app.get("/api/health", (_req, res) => {
     res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
@@ -575,8 +589,29 @@ Strict Requirements:
           }
         } catch (chatErr: any) {
           lastErrorMessage = chatErr?.message || String(chatErr);
-          console.warn(`Model ${candidate} failed with message: ${lastErrorMessage.slice(0, 100)}. Falling back to next model...`);
-          await sleep(350);
+          console.warn(`Model ${candidate} multi-turn failed: ${lastErrorMessage.slice(0, 100)}. Trying direct query on ${candidate}...`);
+          try {
+            // Direct query attempt bypasses potential chat history formatting issues
+            const directResponse = await withTimeout(
+              ai.models.generateContent({
+                model: candidate,
+                contents: `${systemInstruction}\n\nStudent Query: ${message}`,
+                config: {
+                  temperature: 0.7,
+                },
+              }),
+              18000,
+              `Direct prompt timed out on ${candidate}`
+            );
+            if (directResponse.text && directResponse.text.trim()) {
+              responseText = directResponse.text;
+              actualModelUsed = candidate;
+              break;
+            }
+          } catch (directErr: any) {
+            console.warn(`Direct query on ${candidate} also failed: ${String(directErr).slice(0, 80)}. Falling back to next candidate...`);
+          }
+          await sleep(250);
         }
       }
 
